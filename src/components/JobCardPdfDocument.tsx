@@ -296,13 +296,23 @@ export const JobCardPdfDocument: React.FC<JobCardPdfDocumentProps> = ({ jobCard 
     return `$${amount.toFixed(2)}`;
   };
 
-  // Calculate Total B from parts and consumables
+  // Calculate Total B from parts and consumables (dynamically from JSONB array)
   const calculateTotalB = () => {
     if (!jobCard.parts_and_consumables) return 0;
     return jobCard.parts_and_consumables.reduce((sum, part) => sum + (part.total_cost_aud || 0), 0);
   };
 
+  // Calculate Total C from lubricants used (dynamically from JSONB array)
+  const calculateTotalC = () => {
+    if (!jobCard.lubricants_used) return 0;
+    return jobCard.lubricants_used.reduce((sum, lubricant) => sum + (lubricant.total_cost || 0), 0);
+  };
+
+  // Calculate dynamic totals
+  const totalA = jobCard.total_a || 0;
   const totalB = calculateTotalB();
+  const totalC = calculateTotalC();
+  const grandTotal = totalA + totalB + totalC;
 
   return (
     <Document>
@@ -826,7 +836,7 @@ export const JobCardPdfDocument: React.FC<JobCardPdfDocumentProps> = ({ jobCard 
             <View style={styles.gridItem}>
               <View style={styles.totalBox}>
                 <Text style={styles.totalLabel}>Total A (Labor):</Text>
-                <Text style={styles.totalValue}>{formatCurrency(jobCard.total_a)}</Text>
+                <Text style={styles.totalValue}>{formatCurrency(totalA)}</Text>
               </View>
             </View>
             <View style={styles.gridItem}>
@@ -838,14 +848,14 @@ export const JobCardPdfDocument: React.FC<JobCardPdfDocumentProps> = ({ jobCard 
             <View style={styles.gridItem}>
               <View style={styles.totalBox}>
                 <Text style={styles.totalLabel}>Total C (Lubricants):</Text>
-                <Text style={styles.totalValue}>{formatCurrency(jobCard.total_c)}</Text>
+                <Text style={styles.totalValue}>{formatCurrency(totalC)}</Text>
               </View>
             </View>
             <View style={styles.gridItem}>
               <View style={[styles.totalBox, { backgroundColor: '#fef3c7' }]}>
                 <Text style={[styles.totalLabel, { color: '#92400e' }]}>Grand Total:</Text>
                 <Text style={[styles.totalValue, { color: '#92400e' }]}>
-                  {formatCurrency((jobCard.total_a || 0) + totalB + (jobCard.total_c || 0))}
+                  {formatCurrency(grandTotal)}
                 </Text>
               </View>
             </View>
