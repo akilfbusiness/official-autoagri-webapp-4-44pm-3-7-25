@@ -537,6 +537,9 @@ function App() {
   const handleCloseJobCardForm = () => {
     setIsFormOpen(false);
     setSelectedCustomerData(null); // Clear customer data when closing form
+    setEditingJobCard(null); // Clear editing job card to discard unsaved changes
+    setFormMode('create'); // Reset form mode to default
+    setActiveFormTab('information'); // Reset to first tab
   };
 
   const getPortalIcon = (portal: PortalType) => {
