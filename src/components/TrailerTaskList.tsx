@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Truck, Calendar, Gauge, Hash, Zap, Disc, Settings, Wrench, Shield } from 'lucide-react';
 import { TrailerTaskProgress, TrailerElectricalTask, TrailerTiresWheelsTask, TrailerBrakeSystemTask, TrailerSuspensionTask, TrailerBodyChassisTask } from '../types/JobCard';
 import { TrailerTaskRow } from './TrailerTaskRow';
@@ -64,6 +64,59 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
 
   const isViewMode = mode === 'view';
 
+  // Initialize trailer progress if needed
+  useEffect(() => {
+    if (vehicleType?.includes('Trailer') && currentProgress.length === 0 && (mode === 'create' || mode === 'edit') && onProgressChange) {
+      const initialTrailerProgress: TrailerTaskProgress = {
+        trailer_date: undefined,
+        trailer_kms: undefined,
+        plant_number: '',
+        electrical_tasks: ELECTRICAL_SYSTEM_TASKS.map(task => ({
+          name: task.name,
+          task: task.task,
+          status: task.status,
+          description: task.description || '',
+          done_by: task.done_by || '',
+          hours: task.hours || 0
+        })),
+        tires_wheels_tasks: TIRES_WHEELS_TASKS.map(task => ({
+          name: task.name,
+          task: task.task,
+          status: task.status,
+          description: task.description || '',
+          done_by: task.done_by || '',
+          hours: task.hours || 0
+        })),
+        brake_system_tasks: BRAKE_SYSTEM_TASKS.map(task => ({
+          name: task.name,
+          task: task.task,
+          status: task.status,
+          description: task.description || '',
+          done_by: task.done_by || '',
+          hours: task.hours || 0
+        })),
+        suspension_tasks: SUSPENSION_TASKS.map(task => ({
+          name: task.name,
+          task: task.task,
+          status: task.status,
+          description: task.description || '',
+          done_by: task.done_by || '',
+          hours: task.hours || 0
+        })),
+        body_chassis_tasks: BODY_CHASSIS_TASKS.map(task => ({
+          name: task.name,
+          task: task.task,
+          status: task.status,
+          description: task.description || '',
+          done_by: task.done_by || '',
+          hours: task.hours || 0
+        })),
+      };
+      
+      onProgressChange([initialTrailerProgress]);
+    }
+  }, [vehicleType, currentProgress.length, mode, onProgressChange]);
+
   // Get the first (and likely only) trailer progress entry
   const trailerProgress = currentProgress[0] || {};
 
@@ -75,19 +128,8 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
       [field]: value
     }];
 
-    // Filter out empty progress (but keep if it has any meaningful data)
-    const filteredProgress = updatedProgress.filter(progress => 
-      (progress.trailer_date) ||
-      (progress.trailer_kms !== undefined && progress.trailer_kms !== null) ||
-      (progress.plant_number && progress.plant_number.trim()) ||
-      (progress.electrical_tasks && progress.electrical_tasks.some(task => task.remarks && task.remarks.trim())) ||
-      (progress.tires_wheels_tasks && progress.tires_wheels_tasks.some(task => task.remarks && task.remarks.trim())) ||
-      (progress.brake_system_tasks && progress.brake_system_tasks.some(task => task.remarks && task.remarks.trim())) ||
-      (progress.suspension_tasks && progress.suspension_tasks.some(task => task.remarks && task.remarks.trim())) ||
-      (progress.body_chassis_tasks && progress.body_chassis_tasks.some(task => task.remarks && task.remarks.trim()))
-    );
-
-    onProgressChange(filteredProgress);
+    // Always keep the trailer progress object - no filtering
+    onProgressChange(updatedProgress);
   };
 
   const updateElectricalTask = (index: number, field: string, value: any) => {
