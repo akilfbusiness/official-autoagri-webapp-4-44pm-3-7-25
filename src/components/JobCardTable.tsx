@@ -17,6 +17,18 @@ interface JobCardTableProps {
   isLoading: boolean;
   isArchivedView?: boolean;
   onConfirmDownload?: (jobCard: JobCard) => void;
+  // New props for external control
+  hideControls?: boolean;
+  searchTerm?: string;
+  searchFilterType?: SearchFilterType;
+  sortConfig?: SortConfig;
+  currentPage?: number;
+  itemsPerPage?: number;
+  onSearchTermChange?: (term: string) => void;
+  onSearchFilterTypeChange?: (type: SearchFilterType) => void;
+  onSortConfigChange?: (config: SortConfig) => void;
+  onCurrentPageChange?: (page: number) => void;
+  onItemsPerPageChange?: (items: number) => void;
 }
 
 type SortConfig = {
@@ -50,12 +62,36 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
   isLoading,
   isArchivedView = false,
   onConfirmDownload,
+  hideControls = false,
+  searchTerm: externalSearchTerm,
+  searchFilterType: externalSearchFilterType,
+  sortConfig: externalSortConfig,
+  currentPage: externalCurrentPage,
+  itemsPerPage: externalItemsPerPage,
+  onSearchTermChange,
+  onSearchFilterTypeChange,
+  onSortConfigChange,
+  onCurrentPageChange,
+  onItemsPerPageChange,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchFilterType, setSearchFilterType] = useState<SearchFilterType>('all');
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // Use external state if provided, otherwise use internal state
+  const [internalSearchTerm, setInternalSearchTerm] = useState('');
+  const [internalSearchFilterType, setInternalSearchFilterType] = useState<SearchFilterType>('all');
+  const [internalSortConfig, setInternalSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
+  const [internalCurrentPage, setInternalCurrentPage] = useState(1);
+  const [internalItemsPerPage, setInternalItemsPerPage] = useState(10);
+
+  const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
+  const searchFilterType = externalSearchFilterType !== undefined ? externalSearchFilterType : internalSearchFilterType;
+  const sortConfig = externalSortConfig !== undefined ? externalSortConfig : internalSortConfig;
+  const currentPage = externalCurrentPage !== undefined ? externalCurrentPage : internalCurrentPage;
+  const itemsPerPage = externalItemsPerPage !== undefined ? externalItemsPerPage : internalItemsPerPage;
+
+  const setSearchTerm = onSearchTermChange || setInternalSearchTerm;
+  const setSearchFilterType = onSearchFilterTypeChange || setInternalSearchFilterType;
+  const setSortConfig = onSortConfigChange || setInternalSortConfig;
+  const setCurrentPage = onCurrentPageChange || setInternalCurrentPage;
+  const setItemsPerPage = onItemsPerPageChange || setInternalItemsPerPage;
 
   const requestSort = (key: keyof JobCard) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -252,76 +288,56 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Search controls for all views */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex gap-3 flex-1 max-w-2xl">
-          {/* Search Filter Dropdown */}
-          <div className="w-48">
-            <select
-              value={searchFilterType}
-              onChange={(e) => setSearchFilterType(e.target.value as SearchFilterType)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            >
-              {SEARCH_FILTER_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
-              placeholder={getSearchPlaceholder()}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* Pagination Controls - Only show for Dashboard views */}
-        {!isArchivedView && shouldShowPagination && (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Show:</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-              </select>
-              <span className="text-sm text-gray-600">per page</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Archived view pagination controls */}
-      {isArchivedView && shouldShowPagination && (
+      {/* Search controls - only show if not hidden */}
+      {!hideControls && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div></div> {/* Spacer */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Show:</span>
+          <div className="flex gap-3 flex-1 max-w-2xl">
+            {/* Search Filter Dropdown */}
+            <div className="w-48">
               <select
-                value={itemsPerPage}
-                onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={searchFilterType}
+                onChange={(e) => setSearchFilterType(e.target.value as SearchFilterType)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
+                {SEARCH_FILTER_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
-              <span className="text-sm text-gray-600">per page</span>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder={getSearchPlaceholder()}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
           </div>
+
+          {/* Pagination Controls - Only show for Dashboard views */}
+          {!isArchivedView && shouldShowPagination && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Show:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                </select>
+                <span className="text-sm text-gray-600">per page</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -541,7 +557,7 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
       </div>
 
       {/* Pagination Controls - Only show for Dashboard view */}
-      {!isArchivedView && shouldShowPagination && totalPages > 1 && (
+      {!hideControls && !isArchivedView && shouldShowPagination && totalPages > 1 && (
         <div className="flex items-center justify-between bg-white px-6 py-3 border border-gray-200 rounded-lg">
           <div className="flex items-center text-sm text-gray-700">
             <span>
@@ -612,12 +628,12 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
       {/* Results count */}
       <div className="text-sm text-gray-500 flex justify-between items-center">
         <span>
-          {!isArchivedView && shouldShowPagination ? 
+          {!hideControls && !isArchivedView && shouldShowPagination ? 
             `Page ${currentPage} of ${totalPages} (${filteredAndSortedJobCards.length} total job cards)` :
             `Showing ${filteredAndSortedJobCards.length} of ${jobCards.length} job cards`
           }
         </span>
-        {!isArchivedView && searchFilterType !== 'all' && (
+        {!hideControls && !isArchivedView && searchFilterType !== 'all' && (
           <span className="text-xs text-blue-600">
             Filtering by: {SEARCH_FILTER_OPTIONS.find(opt => opt.value === searchFilterType)?.label}
           </span>

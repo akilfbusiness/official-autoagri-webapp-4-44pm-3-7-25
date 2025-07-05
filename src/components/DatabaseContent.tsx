@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Filter, SortAsc, Calendar, ChevronDown, RefreshCw, Database, AlertCircle } from 'lucide-react';
+import { Search, Filter, SortAsc, Calendar, ChevronDown, RefreshCw, Database, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { JobCard } from '../types/JobCard';
 import { JobCardTable } from './JobCardTable';
 
@@ -766,6 +766,17 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
       {/* Job Cards Table */}
       <JobCardTable
         jobCards={paginatedJobCards}
+        hideControls={true}
+        searchTerm={searchTerm}
+        searchFilterType={searchFilterType}
+        sortConfig={sortConfig}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        onSearchTermChange={setSearchTerm}
+        onSearchFilterTypeChange={setSearchFilterType}
+        onSortConfigChange={setSortConfig}
+        onCurrentPageChange={setCurrentPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
         onEdit={onEdit}
         onView={onView}
         onArchive={onArchive}
@@ -776,6 +787,75 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
         isArchivedView={true}
         onConfirmDownload={onConfirmDownload}
       />
+
+      {/* Pagination Controls for Database View */}
+      {shouldShowPagination && totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-6 py-3 border border-gray-200 rounded-lg">
+          <div className="flex items-center text-sm text-gray-700">
+            <span>
+              Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedJobCards.length)} of {filteredAndSortedJobCards.length} results
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className={`flex items-center gap-1 px-3 py-2 text-sm rounded-md transition-colors ${
+                currentPage === 1
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                // Show first page, last page, current page, and pages around current
+                let page;
+                if (totalPages <= 5) {
+                  page = i + 1;
+                } else if (currentPage <= 3) {
+                  page = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  page = totalPages - 4 + i;
+                } else {
+                  page = currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-2 text-sm rounded-md transition-colors ${
+                      currentPage === page
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className={`flex items-center gap-1 px-3 py-2 text-sm rounded-md transition-colors ${
+                currentPage === totalPages
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Click outside handlers */}
       {(showSortDropdown || showFilterDropdown) && (
@@ -789,4 +869,24 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
       )}
     </div>
   );
+
+  // Helper functions for pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Determine if pagination should be shown
+  const shouldShowPagination = filteredAndSortedJobCards.length > 10;
 };
