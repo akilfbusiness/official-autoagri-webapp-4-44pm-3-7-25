@@ -58,8 +58,8 @@ export const TrailerTaskRow: React.FC<TrailerTaskRowProps> = React.memo(({
   };
 
   const MandatoryIndicator: React.FC = () => (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
-      mandatory
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 ml-2">
+      MANDATORY
     </span>
   );
 
