@@ -54,6 +54,7 @@ function App() {
   const [confirmModalConfirmText, setConfirmModalConfirmText] = useState('');
   const [confirmModalType, setConfirmModalType] = useState<'archive' | 'unarchive' | 'delete' | 'complete' | 'download' | 'discard'>('archive');
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [formResetKey, setFormResetKey] = useState(0);
 
   // Close confirmation modal state
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
@@ -530,6 +531,12 @@ function App() {
 
       // Clear selected customer data after successful save
       setSelectedCustomerData(null);
+      
+      // Close form immediately after successful save without confirmation
+      setIsFormOpen(false);
+      setEditingJobCard(null);
+      // Reset form for next use
+      setFormResetKey(prev => prev + 1);
     } catch (error) {
       console.error('Error saving job card:', error);
       alert('Error saving job card. Please try again.');
@@ -548,6 +555,8 @@ function App() {
     setEditingJobCard(null); // Discard any changes for existing job card
     setSelectedCustomerData(null); // Clear any pre-filled data for new job card
     setIsCloseConfirmModalOpen(false);
+    // Force form to reset by changing the key
+    setFormResetKey(prev => prev + 1);
   };
 
   const handleCancelCloseForm = () => {
@@ -1123,6 +1132,7 @@ function App() {
 
       {/* Job Card Form Modal */}
       <JobCardForm
+        key={formResetKey}
         isOpen={isFormOpen}
         onClose={handleCloseJobCardForm}
         onSave={handleFormSave}
