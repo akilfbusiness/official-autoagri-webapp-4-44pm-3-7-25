@@ -58,6 +58,9 @@ function App() {
   // Close confirmation modal state
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
+  // Form key for forcing re-initialization
+  const [newJobCardFormKey, setNewJobCardFormKey] = useState(0);
+
   const activeJobCards = getActiveJobCards();
   const archivedJobCards = getArchivedJobCards();
   const incompleteWorkerJobCards = getIncompleteWorkerJobCards();
@@ -67,6 +70,7 @@ function App() {
 
   const handleCreateNew = () => {
     // Open customer selection modal instead of directly opening the form
+    setNewJobCardFormKey(prev => prev + 1); // Force form reset for new job card
     setIsCustomerSelectionOpen(true);
   };
 
@@ -547,6 +551,7 @@ function App() {
     setIsFormOpen(false);
     setEditingJobCard(null); // Discard any changes for existing job card
     setSelectedCustomerData(null); // Clear any pre-filled data for new job card
+    setNewJobCardFormKey(prev => prev + 1); // Force form reset for next new job card
     setIsCloseConfirmModalOpen(false);
   };
 
@@ -1123,6 +1128,7 @@ function App() {
 
       {/* Job Card Form Modal */}
       <JobCardForm
+        key={editingJobCard ? editingJobCard.id : `new-${newJobCardFormKey}`}
         isOpen={isFormOpen}
         onClose={handleCloseJobCardForm}
         onSave={handleFormSave}
