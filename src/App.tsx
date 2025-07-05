@@ -55,6 +55,11 @@ function App() {
   const [confirmModalType, setConfirmModalType] = useState<'archive' | 'unarchive' | 'delete' | 'complete' | 'download' | 'discard'>('archive');
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [formResetKey, setFormResetKey] = useState(0);
+  const [skipCloseConfirmation, setSkipCloseConfirmation] = useState(false);
+  const [formResetKey, setFormResetKey] = useState(0);
+
+  // Close confirmation modal state
+  const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
   // Close confirmation modal state
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
@@ -404,6 +409,9 @@ function App() {
 
   const handleFormSave = async (formData: JobCardFormData) => {
     try {
+      // Set flag to skip close confirmation after successful save
+      setSkipCloseConfirmation(true);
+      
       console.log('App.tsx - Form data received:', formData.service_progress);
       console.log('App.tsx - Form data received:', formData.trailer_progress);
       console.log('App.tsx - Form data received:', formData.other_progress);
@@ -537,14 +545,38 @@ function App() {
       setEditingJobCard(null);
       // Reset form for next use
       setFormResetKey(prev => prev + 1);
+      
+      // Reset the skip flag after a short delay
+      setTimeout(() => {
+        setSkipCloseConfirmation(false);
+      }, 100);
+      
+      // Close form immediately after successful save without confirmation
+      setIsFormOpen(false);
+      setEditingJobCard(null);
+      // Reset form for next use
+      setFormResetKey(prev => prev + 1);
     } catch (error) {
       console.error('Error saving job card:', error);
       alert('Error saving job card. Please try again.');
+      // Reset the skip flag on error
+      setSkipCloseConfirmation(false);
       throw error; // Re-throw to prevent form from closing
     }
   };
 
   const handleCloseJobCardForm = () => {
+    // Skip confirmation if we just saved successfully
+    if (skipCloseConfirmation) {
+      return;
+    }
+    
+    // Show confirmation modal before closing
+    setIsCloseConfirmModalOpen(true);
+  };
+
+  const handleConfirmCloseForm = () => {
+    // Actually close the form and discard changes
     // Show confirmation modal before closing
     setIsCloseConfirmModalOpen(true);
   };
@@ -557,6 +589,14 @@ function App() {
     setIsCloseConfirmModalOpen(false);
     // Force form to reset by changing the key
     setFormResetKey(prev => prev + 1);
+    setSelectedCustomerData(null); // Clear any pre-filled data for new job card
+    setIsCloseConfirmModalOpen(false);
+    // Force form to reset by changing the key
+    setFormResetKey(prev => prev + 1);
+  };
+
+  const handleCancelCloseForm = () => {
+    setIsCloseConfirmModalOpen(false);
   };
 
   const handleCancelCloseForm = () => {
@@ -1133,6 +1173,7 @@ function App() {
       {/* Job Card Form Modal */}
       <JobCardForm
         key={formResetKey}
+        key={formResetKey}
         isOpen={isFormOpen}
         onClose={handleCloseJobCardForm}
         onSave={handleFormSave}
@@ -1155,6 +1196,25 @@ function App() {
           message={confirmModalMessage}
           confirmButtonText={confirmModalConfirmText}
           type={confirmModalType}
+        />
+      )}
+
+      {/* Close Form Confirmation Modal */}
+      {isCloseConfirmModalOpen && (
+        <ConfirmationModal
+          isOpen={isCloseConfirmModalOpen}
+          onClose={handleCancelCloseForm}
+          onConfirm={handleConfirmCloseForm}
+          title="Discard Changes"
+          message={`Are you sure you want to discard all changes? ${
+            formMode === 'create' 
+              ? 'All information entered for this new job card will be lost.' 
+              : 'All unsaved changes to this job card will be lost.'
+          } This action cannot be undone.`}
+          confirmButtonText="Discard Changes"
+          type="discard"
+        />
+      )}
         />
       )}
 
