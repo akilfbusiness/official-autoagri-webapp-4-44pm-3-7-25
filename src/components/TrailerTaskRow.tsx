@@ -98,13 +98,14 @@ export const TrailerTaskRow: React.FC<TrailerTaskRowProps> = React.memo(({
         />
       </td>
       <td className="px-6 py-4 align-top">
-        <input
+        <textarea
           type="text"
           value={task.done_by || ''}
           onChange={(e) => onUpdate(index, 'done_by', e.target.value)}
           disabled={isViewMode}
           placeholder="Mechanic name"
-          className={`w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+          rows={2}
+          className={`w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-y min-h-[2.5rem] ${
             isViewMode ? 'bg-gray-50' : ''
           }`}
         />
