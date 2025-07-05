@@ -15,6 +15,19 @@ type FormTabType = 'information' | 'mechanic' | 'parts' | 'payments';
 type PortalType = 'admin' | 'mechanic' | 'parts';
 type PageType = 'dashboard' | 'database';
 
+// Validation state types
+interface ValidationInvalidFields {
+  service_tasks?: { [taskName: string]: { status?: boolean; description?: boolean; done_by?: boolean } };
+  trailer_tasks?: {
+    electrical_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+    tires_wheels_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+    brake_system_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+    suspension_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+    body_chassis_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+  };
+  other_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+}
+
 function App() {
   const {
     loading,
@@ -54,6 +67,10 @@ function App() {
   const [confirmModalConfirmText, setConfirmModalConfirmText] = useState('');
   const [confirmModalType, setConfirmModalType] = useState<'archive' | 'unarchive' | 'delete' | 'complete' | 'download'>('archive');
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  // Validation state
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [validationInvalidFields, setValidationInvalidFields] = useState<ValidationInvalidFields>({});
 
   // Trailer validation state
   const [trailerValidationErrors, setTrailerValidationErrors] = useState<any>(null);
@@ -570,6 +587,241 @@ function App() {
     setPendingAction(null);
   };
 
+  // Validation function for mandatory fields
+  const validateMandatoryFields = (formData: JobCardFormData): { isValid: boolean; invalidFields: ValidationInvalidFields; errorMessage: string } => {
+    const invalidFields: ValidationInvalidFields = {};
+    const errors: string[] = [];
+
+    // Check Service Task Lists (Service A, B, C, D)
+    if (formData.service_selection && ['Service A', 'Service B', 'Service C', 'Service D'].includes(formData.service_selection)) {
+      if (formData.service_progress && formData.service_progress.length > 0) {
+        const serviceInvalidFields: { [taskName: string]: { status?: boolean; description?: boolean; done_by?: boolean } } = {};
+        let hasServiceErrors = false;
+
+        formData.service_progress.forEach((task) => {
+          const taskInvalidFields: { status?: boolean; description?: boolean; done_by?: boolean } = {};
+          
+          if (!task.status) {
+            taskInvalidFields.status = true;
+            hasServiceErrors = true;
+          }
+          if (!task.description || task.description.trim() === '') {
+            taskInvalidFields.description = true;
+            hasServiceErrors = true;
+          }
+          if (!task.done_by || task.done_by.trim() === '') {
+            taskInvalidFields.done_by = true;
+            hasServiceErrors = true;
+          }
+
+          if (Object.keys(taskInvalidFields).length > 0) {
+            serviceInvalidFields[task.task_name] = taskInvalidFields;
+          }
+        });
+
+        if (hasServiceErrors) {
+          invalidFields.service_tasks = serviceInvalidFields;
+          errors.push(`${formData.service_selection} Task List: All Status, Description, and Done By fields are mandatory`);
+        }
+      }
+    }
+
+    // Check Trailer Task List
+    if (formData.vehicle_type?.includes('Trailer')) {
+      if (formData.trailer_progress && formData.trailer_progress.length > 0) {
+        const trailerProgress = formData.trailer_progress[0];
+        const trailerInvalidFields: ValidationInvalidFields['trailer_tasks'] = {};
+        let hasTrailerErrors = false;
+
+        // Check electrical tasks
+        if (trailerProgress.electrical_tasks) {
+          const electricalInvalidFields: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } } = {};
+          trailerProgress.electrical_tasks.forEach((task, index) => {
+            const taskInvalidFields: { status?: boolean; description?: boolean; done_by?: boolean } = {};
+            
+            if (!task.status) {
+              taskInvalidFields.status = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.description || task.description.trim() === '') {
+              taskInvalidFields.description = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.done_by || task.done_by.trim() === '') {
+              taskInvalidFields.done_by = true;
+              hasTrailerErrors = true;
+            }
+
+            if (Object.keys(taskInvalidFields).length > 0) {
+              electricalInvalidFields[index] = taskInvalidFields;
+            }
+          });
+          if (Object.keys(electricalInvalidFields).length > 0) {
+            trailerInvalidFields.electrical_tasks = electricalInvalidFields;
+          }
+        }
+
+        // Check tires/wheels tasks
+        if (trailerProgress.tires_wheels_tasks) {
+          const tiresInvalidFields: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } } = {};
+          trailerProgress.tires_wheels_tasks.forEach((task, index) => {
+            const taskInvalidFields: { status?: boolean; description?: boolean; done_by?: boolean } = {};
+            
+            if (!task.status) {
+              taskInvalidFields.status = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.description || task.description.trim() === '') {
+              taskInvalidFields.description = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.done_by || task.done_by.trim() === '') {
+              taskInvalidFields.done_by = true;
+              hasTrailerErrors = true;
+            }
+
+            if (Object.keys(taskInvalidFields).length > 0) {
+              tiresInvalidFields[index] = taskInvalidFields;
+            }
+          });
+          if (Object.keys(tiresInvalidFields).length > 0) {
+            trailerInvalidFields.tires_wheels_tasks = tiresInvalidFields;
+          }
+        }
+
+        // Check brake system tasks
+        if (trailerProgress.brake_system_tasks) {
+          const brakeInvalidFields: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } } = {};
+          trailerProgress.brake_system_tasks.forEach((task, index) => {
+            const taskInvalidFields: { status?: boolean; description?: boolean; done_by?: boolean } = {};
+            
+            if (!task.status) {
+              taskInvalidFields.status = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.description || task.description.trim() === '') {
+              taskInvalidFields.description = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.done_by || task.done_by.trim() === '') {
+              taskInvalidFields.done_by = true;
+              hasTrailerErrors = true;
+            }
+
+            if (Object.keys(taskInvalidFields).length > 0) {
+              brakeInvalidFields[index] = taskInvalidFields;
+            }
+          });
+          if (Object.keys(brakeInvalidFields).length > 0) {
+            trailerInvalidFields.brake_system_tasks = brakeInvalidFields;
+          }
+        }
+
+        // Check suspension tasks
+        if (trailerProgress.suspension_tasks) {
+          const suspensionInvalidFields: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } } = {};
+          trailerProgress.suspension_tasks.forEach((task, index) => {
+            const taskInvalidFields: { status?: boolean; description?: boolean; done_by?: boolean } = {};
+            
+            if (!task.status) {
+              taskInvalidFields.status = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.description || task.description.trim() === '') {
+              taskInvalidFields.description = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.done_by || task.done_by.trim() === '') {
+              taskInvalidFields.done_by = true;
+              hasTrailerErrors = true;
+            }
+
+            if (Object.keys(taskInvalidFields).length > 0) {
+              suspensionInvalidFields[index] = taskInvalidFields;
+            }
+          });
+          if (Object.keys(suspensionInvalidFields).length > 0) {
+            trailerInvalidFields.suspension_tasks = suspensionInvalidFields;
+          }
+        }
+
+        // Check body/chassis tasks
+        if (trailerProgress.body_chassis_tasks) {
+          const bodyInvalidFields: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } } = {};
+          trailerProgress.body_chassis_tasks.forEach((task, index) => {
+            const taskInvalidFields: { status?: boolean; description?: boolean; done_by?: boolean } = {};
+            
+            if (!task.status) {
+              taskInvalidFields.status = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.description || task.description.trim() === '') {
+              taskInvalidFields.description = true;
+              hasTrailerErrors = true;
+            }
+            if (!task.done_by || task.done_by.trim() === '') {
+              taskInvalidFields.done_by = true;
+              hasTrailerErrors = true;
+            }
+
+            if (Object.keys(taskInvalidFields).length > 0) {
+              bodyInvalidFields[index] = taskInvalidFields;
+            }
+          });
+          if (Object.keys(bodyInvalidFields).length > 0) {
+            trailerInvalidFields.body_chassis_tasks = bodyInvalidFields;
+          }
+        }
+
+        if (hasTrailerErrors) {
+          invalidFields.trailer_tasks = trailerInvalidFields;
+          errors.push('Trailer Task List: All Status, Description, and Done By fields are mandatory');
+        }
+      }
+    }
+
+    // Check Other Task List
+    if (formData.vehicle_type?.includes('Other')) {
+      if (formData.other_progress && formData.other_progress.length > 0) {
+        const otherInvalidFields: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } } = {};
+        let hasOtherErrors = false;
+
+        formData.other_progress.forEach((task, index) => {
+          const taskInvalidFields: { status?: boolean; description?: boolean; done_by?: boolean } = {};
+          
+          if (!task.status) {
+            taskInvalidFields.status = true;
+            hasOtherErrors = true;
+          }
+          if (!task.description || task.description.trim() === '') {
+            taskInvalidFields.description = true;
+            hasOtherErrors = true;
+          }
+          if (!task.done_by || task.done_by.trim() === '') {
+            taskInvalidFields.done_by = true;
+            hasOtherErrors = true;
+          }
+
+          if (Object.keys(taskInvalidFields).length > 0) {
+            otherInvalidFields[index] = taskInvalidFields;
+          }
+        });
+
+        if (hasOtherErrors) {
+          invalidFields.other_tasks = otherInvalidFields;
+          errors.push('Other Task List: All Status, Description, and Done By fields are mandatory');
+        }
+      }
+    }
+
+    const isValid = errors.length === 0;
+    const errorMessage = errors.length > 0 
+      ? `Please complete all mandatory fields before saving:\n\n${errors.join('\n')}\n\nAll Status, Description, and Done By fields must be filled out.`
+      : '';
+
+    return { isValid, invalidFields, errorMessage };
+  };
+
   const handleFormSave = async (formData: JobCardFormData) => {
     try {
       console.log('App.tsx - Form data received:', formData.service_progress);
@@ -577,6 +829,25 @@ function App() {
       console.log('App.tsx - Form data received:', formData.other_progress);
       console.log('App.tsx - Form data received:', formData.parts_and_consumables);
       console.log('App.tsx - Form data received:', formData.lubricants_used);
+      
+      // Perform validation before saving
+      const validation = validateMandatoryFields(formData);
+      
+      if (!validation.isValid) {
+        // Set validation state to show errors in the form
+        setShowValidationErrors(true);
+        setValidationInvalidFields(validation.invalidFields);
+        
+        // Show error message to user
+        alert(validation.errorMessage);
+        
+        // Prevent form from saving
+        throw new Error('Validation failed: Mandatory fields are missing');
+      }
+      
+      // Clear validation errors if validation passes
+      setShowValidationErrors(false);
+      setValidationInvalidFields({});
       
       if (formMode === 'create') {
         await addJobCard({
@@ -701,7 +972,12 @@ function App() {
       setSelectedCustomerData(null);
     } catch (error) {
       console.error('Error saving job card:', error);
-      alert('Error saving job card. Please try again.');
+      
+      // Only show generic error if it's not a validation error
+      if (!(error instanceof Error && error.message.includes('Validation failed'))) {
+        alert('Error saving job card. Please try again.');
+      }
+      
       throw error; // Re-throw to prevent form from closing
     }
   };
@@ -709,6 +985,9 @@ function App() {
   const handleCloseJobCardForm = () => {
     setIsFormOpen(false);
     setSelectedCustomerData(null); // Clear customer data when closing form
+    // Clear validation state when closing form
+    setShowValidationErrors(false);
+    setValidationInvalidFields({});
     setEditingJobCard(null); // Clear editing job card to discard unsaved changes
     setFormMode('create'); // Reset form mode to default
     setActiveFormTab('information'); // Reset to first tab
@@ -1294,6 +1573,8 @@ function App() {
         restrictedMode={formMode === 'mechanic' || formMode === 'parts'} // Pass restricted mode flag for both portals
         onRefresh={handleRefreshJobCard}
         initialCustomerData={selectedCustomerData} // Pass the selected customer data
+        showValidationErrors={showValidationErrors}
+        validationInvalidFields={validationInvalidFields}
         initialTrailerValidationErrors={trailerValidationErrors} // Pass validation errors
       />
 
