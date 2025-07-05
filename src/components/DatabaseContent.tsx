@@ -18,6 +18,18 @@ type SortConfig = {
   direction: 'asc' | 'desc';
 };
 
+type SearchFilterType = 'all' | 'customer_name' | 'company_name' | 'mobile' | 'rego' | 'invoice_number' | 'job_number';
+
+const SEARCH_FILTER_OPTIONS = [
+  { label: 'All Fields', value: 'all' as SearchFilterType },
+  { label: 'Customer Name', value: 'customer_name' as SearchFilterType },
+  { label: 'Company Name', value: 'company_name' as SearchFilterType },
+  { label: 'Mobile', value: 'mobile' as SearchFilterType },
+  { label: 'REGO', value: 'rego' as SearchFilterType },
+  { label: 'Invoice Number', value: 'invoice_number' as SearchFilterType },
+  { label: 'Job Number', value: 'job_number' as SearchFilterType },
+];
+
 type FilterConfig = {
   // Job card creation date filters
   month: string;
@@ -48,6 +60,7 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchFilterType, setSearchFilterType] = useState<SearchFilterType>('all');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'created_at', direction: 'desc' });
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     month: '',
@@ -176,17 +189,54 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
     setCurrentPage(1);
   };
 
+  const getSearchPlaceholder = () => {
+    const selectedOption = SEARCH_FILTER_OPTIONS.find(option => option.value === searchFilterType);
+    if (searchFilterType === 'all') {
+      return 'Search archived job cards...';
+    }
+    return `Search by ${selectedOption?.label.toLowerCase()}...`;
+  };
   const filteredAndSortedJobCards = useMemo(() => {
     let filtered = jobCardsData.filter(card => {
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = (
-        card.job_number?.toLowerCase().includes(searchLower) ||
-        card.id.toLowerCase().includes(searchLower) ||
-        card.customer_name?.toLowerCase().includes(searchLower) ||
-        card.company_name?.toLowerCase().includes(searchLower) ||
-        card.rego?.toLowerCase().includes(searchLower) ||
-        card.mobile?.toLowerCase().includes(searchLower)
-      );
+      // Apply search filter
+      let matchesSearch = true;
+      if (searchTerm.trim()) {
+        const searchLower = searchTerm.toLowerCase();
+        
+        // Apply search based on selected filter type
+        switch (searchFilterType) {
+          case 'customer_name':
+            matchesSearch = card.customer_name?.toLowerCase().includes(searchLower) || false;
+            break;
+          case 'company_name':
+            matchesSearch = card.company_name?.toLowerCase().includes(searchLower) || false;
+            break;
+          case 'mobile':
+            matchesSearch = card.mobile?.toLowerCase().includes(searchLower) || false;
+            break;
+          case 'rego':
+            matchesSearch = card.rego?.toLowerCase().includes(searchLower) || false;
+            break;
+          case 'invoice_number':
+            matchesSearch = card.invoice_number?.toLowerCase().includes(searchLower) || false;
+            break;
+          case 'job_number':
+            matchesSearch = card.job_number?.toLowerCase().includes(searchLower) || false;
+            break;
+          case 'all':
+          default:
+            matchesSearch = (
+              card.job_number?.toLowerCase().includes(searchLower) ||
+              card.id.toLowerCase().includes(searchLower) ||
+              card.customer_name?.toLowerCase().includes(searchLower) ||
+              card.company_name?.toLowerCase().includes(searchLower) ||
+              card.rego?.toLowerCase().includes(searchLower) ||
+              card.mobile?.toLowerCase().includes(searchLower) ||
+              card.invoice_number?.toLowerCase().includes(searchLower)
+            );
+            break;
+        }
+      }
 
       if (!matchesSearch) return false;
 
@@ -282,7 +332,7 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
     }
 
     return filtered;
-  }, [jobCardsData, searchTerm, sortConfig, filterConfig]);
+  }, [jobCardsData, searchTerm, searchFilterType, sortConfig, filterConfig]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedJobCards.length / itemsPerPage);
@@ -293,7 +343,7 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
   // Reset to first page when search term changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, searchFilterType]);
 
   if (loading) {
     return (
@@ -349,15 +399,33 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
 
       {/* Search and Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <input
-            type="text"
-            placeholder="Search archived job cards..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+        <div className="flex gap-3 flex-1 max-w-2xl">
+          {/* Search Filter Dropdown */}
+          <div className="w-48">
+            <select
+              value={searchFilterType}
+              onChange={(e) => setSearchFilterType(e.target.value as SearchFilterType)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              {SEARCH_FILTER_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <input
+              type="text"
+              placeholder={getSearchPlaceholder()}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -686,6 +754,13 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
             <span className="text-sm text-blue-700">Filters applied</span>
           )}
         </div>
+        {searchFilterType !== 'all' && searchTerm && (
+          <div className="mt-2">
+            <span className="text-xs text-blue-600">
+              Filtering by: {SEARCH_FILTER_OPTIONS.find(opt => opt.value === searchFilterType)?.label}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Job Cards Table */}
