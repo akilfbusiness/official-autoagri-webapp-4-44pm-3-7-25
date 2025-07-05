@@ -349,6 +349,12 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
                       <div className="text-xs text-gray-400">
                         Created: {jobCard.created_at.toLocaleDateString()}
                       </div>
+                      {/* Add Invoice Number display */}
+                      {jobCard.invoice_number && (
+                        <div className="text-xs text-blue-600 font-medium">
+                          Invoice: {jobCard.invoice_number}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-6 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
