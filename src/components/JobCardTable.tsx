@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Eye, X, Check, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, X, Check, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { JobCard } from '../types/JobCard';
 import { ActionDropdown } from './ActionDropdown';
 
@@ -24,6 +24,18 @@ type SortConfig = {
   direction: 'asc' | 'desc';
 };
 
+type SearchFilterType = 'all' | 'customer_name' | 'company_name' | 'mobile' | 'rego' | 'invoice_number' | 'job_number';
+
+const SEARCH_FILTER_OPTIONS = [
+  { label: 'All Fields', value: 'all' as SearchFilterType },
+  { label: 'Customer Name', value: 'customer_name' as SearchFilterType },
+  { label: 'Company Name', value: 'company_name' as SearchFilterType },
+  { label: 'Mobile', value: 'mobile' as SearchFilterType },
+  { label: 'REGO', value: 'rego' as SearchFilterType },
+  { label: 'Invoice Number', value: 'invoice_number' as SearchFilterType },
+  { label: 'Job Number', value: 'job_number' as SearchFilterType },
+];
+
 export const JobCardTable: React.FC<JobCardTableProps> = ({
   jobCards,
   onEdit,
@@ -40,6 +52,7 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
   onConfirmDownload,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchFilterType, setSearchFilterType] = useState<SearchFilterType>('all');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -62,27 +75,46 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
       <ChevronDown className="h-3 w-3 text-blue-600" />;
   };
 
+  const getSearchPlaceholder = () => {
+    const selectedOption = SEARCH_FILTER_OPTIONS.find(option => option.value === searchFilterType);
+    if (searchFilterType === 'all') {
+      return 'Search job cards...';
+    }
+    return `Search by ${selectedOption?.label.toLowerCase()}...`;
+  };
+
   const filteredAndSortedJobCards = useMemo(() => {
     let filtered = jobCards.filter(card => {
+      if (!searchTerm.trim()) return true;
+      
       const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = (
-        // Customer Name
-        card.customer_name?.toLowerCase().includes(searchLower) ||
-        // Company Name
-        card.company_name?.toLowerCase().includes(searchLower) ||
-        // Mobile
-        card.mobile?.toLowerCase().includes(searchLower) ||
-        // REGO
-        card.rego?.toLowerCase().includes(searchLower) ||
-        // Invoice Number
-        card.invoice_number?.toLowerCase().includes(searchLower) ||
-        // Job Number
-        card.job_number?.toLowerCase().includes(searchLower) ||
-        // Keep ID search for backward compatibility
-        card.id.toLowerCase().includes(searchLower)
-      );
-
-      return matchesSearch;
+      
+      // Apply search based on selected filter type
+      switch (searchFilterType) {
+        case 'customer_name':
+          return card.customer_name?.toLowerCase().includes(searchLower) || false;
+        case 'company_name':
+          return card.company_name?.toLowerCase().includes(searchLower) || false;
+        case 'mobile':
+          return card.mobile?.toLowerCase().includes(searchLower) || false;
+        case 'rego':
+          return card.rego?.toLowerCase().includes(searchLower) || false;
+        case 'invoice_number':
+          return card.invoice_number?.toLowerCase().includes(searchLower) || false;
+        case 'job_number':
+          return card.job_number?.toLowerCase().includes(searchLower) || false;
+        case 'all':
+        default:
+          return (
+            card.customer_name?.toLowerCase().includes(searchLower) ||
+            card.company_name?.toLowerCase().includes(searchLower) ||
+            card.mobile?.toLowerCase().includes(searchLower) ||
+            card.rego?.toLowerCase().includes(searchLower) ||
+            card.invoice_number?.toLowerCase().includes(searchLower) ||
+            card.job_number?.toLowerCase().includes(searchLower) ||
+            card.id.toLowerCase().includes(searchLower)
+          );
+      }
     });
 
     // Apply sorting
@@ -114,7 +146,7 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
     }
 
     return filtered;
-  }, [jobCards, searchTerm, sortConfig]);
+  }, [jobCards, searchTerm, searchFilterType, sortConfig]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedJobCards.length / itemsPerPage);
@@ -143,10 +175,10 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
     setCurrentPage(1);
   };
 
-  // Reset to first page when search term changes
+  // Reset to first page when search term or filter changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, searchFilterType]);
 
   const handleInvoice = (jobCard: JobCard) => {
     if (onGenerateInvoiceAndSendWebhook) {
@@ -220,17 +252,36 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Only show search bar for non-archived views (Dashboard) */}
+      {/* Only show search controls for non-archived views (Dashboard) */}
       {!isArchivedView && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              placeholder="Search job cards..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="flex gap-3 flex-1 max-w-2xl">
+            {/* Search Filter Dropdown */}
+            <div className="w-48">
+              <select
+                value={searchFilterType}
+                onChange={(e) => setSearchFilterType(e.target.value as SearchFilterType)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                {SEARCH_FILTER_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder={getSearchPlaceholder()}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
           </div>
 
           {/* Pagination Controls for Dashboard */}
@@ -328,13 +379,13 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
                   <td colSpan={isArchivedView ? 7 : 6} className="px-6 py-16 text-center text-gray-500">
                     <div className="flex flex-col items-center justify-center space-y-3">
                       <div className="text-gray-400">
-                        <Eye className="h-12 w-12 mx-auto mb-4" />
+                        <Search className="h-12 w-12 mx-auto mb-4" />
                       </div>
                       <p className="text-lg font-medium">
                         {jobCards.length === 0 ? 'No job cards found' : 'No job cards match your search'}
                       </p>
                       <p className="text-sm text-gray-400">
-                        {jobCards.length === 0 ? 'Create your first job card to get started!' : 'Try adjusting your search terms'}
+                        {jobCards.length === 0 ? 'Create your first job card to get started!' : 'Try adjusting your search terms or filter'}
                       </p>
                     </div>
                   </td>
@@ -469,8 +520,8 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
         <div className="h-32"></div>
       </div>
 
-      {/* Pagination Controls */}
-      {shouldShowPagination && totalPages > 1 && (
+      {/* Pagination Controls - Only show for Dashboard view */}
+      {!isArchivedView && shouldShowPagination && totalPages > 1 && (
         <div className="flex items-center justify-between bg-white px-6 py-3 border border-gray-200 rounded-lg">
           <div className="flex items-center text-sm text-gray-700">
             <span>
@@ -541,11 +592,16 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
       {/* Results count */}
       <div className="text-sm text-gray-500 flex justify-between items-center">
         <span>
-          {shouldShowPagination ? 
+          {!isArchivedView && shouldShowPagination ? 
             `Page ${currentPage} of ${totalPages} (${filteredAndSortedJobCards.length} total job cards)` :
             `Showing ${filteredAndSortedJobCards.length} of ${jobCards.length} job cards`
           }
         </span>
+        {!isArchivedView && searchFilterType !== 'all' && (
+          <span className="text-xs text-blue-600">
+            Filtering by: {SEARCH_FILTER_OPTIONS.find(opt => opt.value === searchFilterType)?.label}
+          </span>
+        )}
       </div>
     </div>
   );
