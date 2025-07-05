@@ -83,7 +83,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             <div 
               className="text-sm text-gray-600 leading-relaxed"
               dangerouslySetInnerHTML={{
-                __html: (message || '')
+                __html: message
                   .replace(/\bStatus\b/g, '<strong>Status</strong>')
                   .replace(/\bDescription\b/g, '<strong>Description</strong>')
                   .replace(/\bDone By\b/g, '<strong>Done By</strong>')

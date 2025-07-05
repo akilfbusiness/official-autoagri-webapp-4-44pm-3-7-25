@@ -7,8 +7,6 @@ interface ServiceTaskRowProps {
   index: number;
   progress: ServiceTaskProgress;
   isViewMode: boolean;
-  isMandatoryCheckActive?: boolean;
-  invalidFields?: { status?: boolean; description?: boolean; done_by?: boolean };
   onUpdate: (taskName: string, field: keyof ServiceTaskProgress, value: any) => void;
 }
 
@@ -17,8 +15,6 @@ export const ServiceTaskRow: React.FC<ServiceTaskRowProps> = React.memo(({
   index,
   progress,
   isViewMode,
-  isMandatoryCheckActive = false,
-  invalidFields = {},
   onUpdate,
 }) => {
   const StatusButton: React.FC<{
@@ -32,8 +28,7 @@ export const ServiceTaskRow: React.FC<ServiceTaskRowProps> = React.memo(({
     const handleClick = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      // Always set the chosen status (don't allow unsetting)
-      onUpdate(task, 'status', status);
+      onUpdate(task, 'status', isSelected ? undefined : status);
     };
     
     return (
@@ -52,12 +47,6 @@ export const ServiceTaskRow: React.FC<ServiceTaskRowProps> = React.memo(({
       </button>
     );
   };
-
-  const MandatoryIndicator: React.FC = () => (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 ml-2">
-      MANDATORY
-    </span>
-  );
 
   return (
     <tr className="hover:bg-gray-50 transition-colors">
@@ -90,7 +79,6 @@ export const ServiceTaskRow: React.FC<ServiceTaskRowProps> = React.memo(({
             colorClass="text-gray-600 bg-gray-50"
           />
         </div>
-        {isMandatoryCheckActive && invalidFields.status && <MandatoryIndicator />}
       </td>
       <td className="px-3 py-4 align-top">
         <textarea
@@ -101,9 +89,8 @@ export const ServiceTaskRow: React.FC<ServiceTaskRowProps> = React.memo(({
           rows={2}
           className={`w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-y min-h-[2.5rem] ${
             isViewMode ? 'bg-gray-50' : ''
-          } ${isMandatoryCheckActive && invalidFields.description ? 'border-red-300 focus:ring-red-500' : ''}`}
+          }`}
         />
-        {isMandatoryCheckActive && invalidFields.description && <MandatoryIndicator />}
       </td>
       <td className="px-3 py-4 align-top">
         <input
@@ -114,9 +101,8 @@ export const ServiceTaskRow: React.FC<ServiceTaskRowProps> = React.memo(({
           placeholder="Mechanic name"
           className={`w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
             isViewMode ? 'bg-gray-50' : ''
-          } ${isMandatoryCheckActive && invalidFields.done_by ? 'border-red-300 focus:ring-red-500' : ''}`}
+          }`}
         />
-        {isMandatoryCheckActive && invalidFields.done_by && <MandatoryIndicator />}
       </td>
       <td className="px-3 py-4 align-top">
         <input

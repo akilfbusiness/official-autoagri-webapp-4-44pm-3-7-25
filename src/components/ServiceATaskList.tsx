@@ -8,8 +8,6 @@ interface ServiceATaskListProps {
   mode: 'create' | 'edit' | 'view';
   currentProgress?: ServiceTaskProgress[];
   onProgressChange?: (progress: ServiceTaskProgress[]) => void;
-  isMandatoryCheckActive?: boolean;
-  initialInvalidFields?: { [taskName: string]: { status?: boolean; description?: boolean; done_by?: boolean } };
 }
 
 const SERVICE_A_TASKS = [
@@ -66,8 +64,6 @@ export const ServiceATaskList: React.FC<ServiceATaskListProps> = ({
   mode,
   currentProgress = [],
   onProgressChange,
-  isMandatoryCheckActive = false,
-  initialInvalidFields = {},
 }) => {
   // Only show if Service A is selected
   if (serviceSelection !== 'Service A') {
@@ -77,13 +73,7 @@ export const ServiceATaskList: React.FC<ServiceATaskListProps> = ({
   const isViewMode = mode === 'view';
 
   const getTaskProgress = (taskName: string): ServiceTaskProgress => {
-    return currentProgress.find(p => p.task_name === taskName) || { 
-      task_name: taskName, 
-      status: 'na', // Default status to N/A
-      description: '',
-      done_by: '',
-      hours: 0
-    };
+    return currentProgress.find(p => p.task_name === taskName) || { task_name: taskName };
   };
 
   const updateTaskProgress = (taskName: string, field: keyof ServiceTaskProgress, value: any) => {
@@ -105,10 +95,6 @@ export const ServiceATaskList: React.FC<ServiceATaskListProps> = ({
       // Add new task
       updatedProgress.push({
         task_name: taskName,
-        status: 'na', // Default status to N/A for new tasks
-        description: '',
-        done_by: '',
-        hours: 0,
         [field]: value
       });
     }
@@ -126,13 +112,6 @@ export const ServiceATaskList: React.FC<ServiceATaskListProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Mandatory Fields Notice */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-        <p className="text-sm text-gray-700">
-          ALL <span className="font-bold text-black">Status</span>, <span className="font-bold text-black">Description</span> and <span className="font-bold text-black">Done By</span> fields are <span className="font-bold text-red-600">MANDATORY</span>, and need to be filled out for the Service A Task List
-        </p>
-      </div>
-
       <div className="border-b border-gray-200 pb-2">
         <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
           <Settings className="h-5 w-5 text-blue-600" />
@@ -174,8 +153,6 @@ export const ServiceATaskList: React.FC<ServiceATaskListProps> = ({
                   index={index}
                   progress={getTaskProgress(task)}
                   isViewMode={isViewMode}
-                  isMandatoryCheckActive={isMandatoryCheckActive}
-                  invalidFields={initialInvalidFields[task] || {}}
                   onUpdate={updateTaskProgress}
                 />
               ))}
@@ -192,11 +169,6 @@ export const ServiceATaskList: React.FC<ServiceATaskListProps> = ({
             <p className="text-sm text-blue-700 mt-1">
               Complete all {SERVICE_A_TASKS.length} tasks and mark their status. Add descriptions for any issues found
               and record the mechanic who performed each task along with time spent.
-              {isMandatoryCheckActive && (
-                <span className="block mt-2 font-medium text-red-700">
-                  Note: Status, Description, and Done By fields are mandatory for completion.
-                </span>
-              )}
             </p>
           </div>
         </div>

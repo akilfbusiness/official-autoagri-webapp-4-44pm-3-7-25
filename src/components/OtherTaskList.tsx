@@ -9,8 +9,6 @@ interface OtherTaskListProps {
   mode: 'create' | 'edit' | 'view';
   currentProgress?: OtherTaskProgress[];
   onProgressChange?: (progress: OtherTaskProgress[]) => void;
-  isMandatoryCheckActive?: boolean;
-  initialInvalidFields?: { [id: string]: { status?: boolean; description?: boolean; done_by?: boolean } };
 }
 
 const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
@@ -18,8 +16,6 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
   mode,
   currentProgress = [],
   onProgressChange,
-  isMandatoryCheckActive = false,
-  initialInvalidFields = {},
 }) => {
   const isViewMode = mode === 'view';
 
@@ -36,7 +32,7 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
     return Array.from({ length: 5 }, () => ({
       id: generateId(),
       task_name: '',
-      status: 'na' as const, // Default status to N/A
+      status: undefined,
       description: '',
       done_by: '',
       hours: 0,
@@ -57,7 +53,7 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
     const newTask: OtherTaskProgress = {
       id: generateId(),
       task_name: '',
-      status: 'na' as const, // Default status to N/A
+      status: undefined,
       description: '',
       done_by: '',
       hours: 0,
@@ -106,13 +102,6 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
       className="mb-6"
     >
       <div className="space-y-6">
-        {/* Mandatory Fields Notice */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <p className="text-sm text-gray-700">
-            ALL <span className="font-bold text-black">Status</span>, <span className="font-bold text-black">Description</span> and <span className="font-bold text-black">Done By</span> fields are <span className="font-bold text-red-600">MANDATORY</span>, and need to be filled out for the Other Task List
-          </p>
-        </div>
-
         <div className="border-b border-gray-200 pb-2">
           <p className="text-sm text-gray-500">Custom tasks for other vehicle types</p>
         </div>
@@ -178,8 +167,6 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
                       key={task.id}
                       task={task}
                       isViewMode={isViewMode}
-                      isMandatoryCheckActive={isMandatoryCheckActive}
-                      invalidFields={initialInvalidFields[task.id] || {}}
                       onUpdate={updateTask}
                       onRemove={removeRow}
                     />
@@ -199,11 +186,6 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
               <p className="text-sm text-amber-700 mt-1">
                 Add custom tasks for vehicles that don't fit standard categories. Include task names, descriptions, 
                 assigned mechanics, and time spent on each task.
-                {isMandatoryCheckActive && (
-                  <span className="block mt-2 font-medium text-red-700">
-                    Note: Status, Description, and Done By fields are mandatory for completion.
-                  </span>
-                )}
               </p>
             </div>
           </div>
