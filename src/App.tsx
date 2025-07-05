@@ -574,18 +574,8 @@ function App() {
 
   const handleConfirmCloseForm = () => {
     // Actually close the form and discard changes
-    // Show confirmation modal before closing
-    setIsCloseConfirmModalOpen(true);
-  };
-
-  const handleConfirmCloseForm = () => {
-    // Actually close the form and discard changes
     setIsFormOpen(false);
     setEditingJobCard(null); // Discard any changes for existing job card
-    setSelectedCustomerData(null); // Clear any pre-filled data for new job card
-    setIsCloseConfirmModalOpen(false);
-    // Force form to reset by changing the key
-    setFormResetKey(prev => prev + 1);
     setSelectedCustomerData(null); // Clear any pre-filled data for new job card
     setIsCloseConfirmModalOpen(false);
     // Force form to reset by changing the key
