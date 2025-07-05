@@ -62,12 +62,6 @@ function App() {
   // Form key for forcing re-initialization
   const [newJobCardFormKey, setNewJobCardFormKey] = useState(0);
 
-  // Close confirmation modal state
-  const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
-
-  // Form key for forcing re-initialization
-  const [newJobCardFormKey, setNewJobCardFormKey] = useState(0);
-
   const activeJobCards = getActiveJobCards();
   const archivedJobCards = getArchivedJobCards();
   const incompleteWorkerJobCards = getIncompleteWorkerJobCards();
@@ -586,19 +580,6 @@ function App() {
     setNewJobCardFormKey(prev => prev + 1); // Force form reset for next new job card
     setIsCloseConfirmModalOpen(false);
     setShouldConfirmDiscard(true); // Reset for next interaction
-  };
-
-  const handleCancelCloseForm = () => {
-    setIsCloseConfirmModalOpen(false);
-  };
-
-  const handleConfirmCloseForm = () => {
-    // Actually close the form and discard changes
-    setIsFormOpen(false);
-    setEditingJobCard(null); // Discard any changes for existing job card
-    setSelectedCustomerData(null); // Clear any pre-filled data for new job card
-    setNewJobCardFormKey(prev => prev + 1); // Force form reset for next new job card
-    setIsCloseConfirmModalOpen(false);
   };
 
   const handleCancelCloseForm = () => {
@@ -1198,25 +1179,6 @@ function App() {
           message={confirmModalMessage}
           confirmButtonText={confirmModalConfirmText}
           type={confirmModalType}
-        />
-      )}
-
-      {/* Close Form Confirmation Modal */}
-      {isCloseConfirmModalOpen && (
-        <ConfirmationModal
-          isOpen={isCloseConfirmModalOpen}
-          onClose={handleCancelCloseForm}
-          onConfirm={handleConfirmCloseForm}
-          title="Discard Changes"
-          message={`Are you sure you want to discard all changes? ${
-            formMode === 'create' 
-              ? 'All information entered for this new job card will be lost.' 
-              : 'All unsaved changes to this job card will be lost.'
-          } This action cannot be undone.`}
-          confirmButtonText="Discard Changes"
-          type="discard"
-        />
-      )}
         />
       )}
 
