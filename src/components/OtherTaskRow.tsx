@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Check, X, Minus } from 'lucide-react';
 import { OtherTaskProgress } from '../types/JobCard';
 
 interface OtherTaskRowProps {
@@ -19,6 +19,37 @@ export const OtherTaskRow: React.FC<OtherTaskRowProps> = React.memo(({
     onUpdate(task.id, field, value);
   };
 
+  const StatusButton: React.FC<{
+    status: 'tick' | 'no' | 'na';
+    icon: React.ReactNode;
+    label: string;
+    colorClass: string;
+  }> = ({ status, icon, label, colorClass }) => {
+    const isSelected = task.status === status;
+    
+    const handleClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFieldChange('status', isSelected ? undefined : status);
+    };
+    
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isViewMode}
+        className={`flex items-center justify-center w-8 h-8 rounded-md border-2 transition-all ${
+          isSelected 
+            ? `${colorClass} border-current` 
+            : 'border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-600'
+        } ${isViewMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+        title={label}
+      >
+        {icon}
+      </button>
+    );
+  };
+
   return (
     <tr className="hover:bg-gray-50 transition-colors">
       <td className="px-4 py-4 align-top">
@@ -32,6 +63,28 @@ export const OtherTaskRow: React.FC<OtherTaskRowProps> = React.memo(({
             isViewMode ? 'bg-gray-50' : ''
           }`}
         />
+      </td>
+      <td className="px-4 py-4 align-top">
+        <div className="flex items-center justify-center gap-1">
+          <StatusButton
+            status="tick"
+            icon={<Check className="h-4 w-4" />}
+            label="Completed"
+            colorClass="text-green-600 bg-green-50"
+          />
+          <StatusButton
+            status="no"
+            icon={<X className="h-4 w-4" />}
+            label="Not Completed"
+            colorClass="text-red-600 bg-red-50"
+          />
+          <StatusButton
+            status="na"
+            icon={<Minus className="h-4 w-4" />}
+            label="Not Applicable"
+            colorClass="text-gray-600 bg-gray-50"
+          />
+        </div>
       </td>
       <td className="px-4 py-4 align-top">
         <textarea

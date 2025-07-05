@@ -65,6 +65,7 @@ export interface TrailerTaskProgress {
 export interface OtherTaskProgress {
   id: string; // Unique identifier for each row
   task_name?: string;
+  status?: 'tick' | 'no' | 'na';
   description?: string;
   done_by?: string;
   hours?: number;
