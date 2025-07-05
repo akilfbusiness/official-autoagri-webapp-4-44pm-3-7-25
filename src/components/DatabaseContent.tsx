@@ -130,6 +130,11 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
     loadData();
   };
 
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
   const requestSort = (key: keyof JobCard) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
