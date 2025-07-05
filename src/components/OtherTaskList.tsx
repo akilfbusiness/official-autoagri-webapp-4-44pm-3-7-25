@@ -32,6 +32,7 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
     return Array.from({ length: 5 }, () => ({
       id: generateId(),
       task_name: '',
+      status: undefined,
       description: '',
       done_by: '',
       hours: 0,
@@ -52,6 +53,7 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
     const newTask: OtherTaskProgress = {
       id: generateId(),
       task_name: '',
+      status: undefined,
       description: '',
       done_by: '',
       hours: 0,
@@ -74,7 +76,17 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
       }
       return task;
     });
-    onProgressChange(updatedProgress);
+
+    // Filter out tasks that have no meaningful data
+    const filteredProgress = updatedProgress.filter(task => 
+      task.status || 
+      (task.task_name && task.task_name.trim()) ||
+      (task.description && task.description.trim()) ||
+      (task.done_by && task.done_by.trim()) ||
+      (task.hours && task.hours > 0)
+    );
+
+    onProgressChange(filteredProgress);
   };
 
   // Return null consistently without early return to avoid React reconciliation issues
@@ -111,19 +123,22 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
         {/* Table */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
+            <table className="w-full min-w-[1000px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
                     Task Name
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
                     Description
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                     Done By
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
                     Hours
                   </th>
                   {!isViewMode && (
@@ -136,7 +151,7 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentProgress.length === 0 ? (
                   <tr>
-                    <td colSpan={isViewMode ? 4 : 5} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={isViewMode ? 5 : 6} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center justify-center space-y-2">
                         <Settings className="h-8 w-8 text-gray-400" />
                         <p className="text-sm">No tasks added yet</p>
