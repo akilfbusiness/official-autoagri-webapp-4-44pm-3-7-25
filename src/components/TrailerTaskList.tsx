@@ -384,6 +384,13 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
         </div>
       </div>
 
+      {/* Mandatory Fields Notice */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <p className="text-sm text-gray-700">
+          ALL <span className="font-bold text-black">Status</span>, <span className="font-bold text-black">Description</span> and <span className="font-bold text-black">Done By</span> fields are <span className="font-bold text-red-600">MANDATORY</span>, and need to be filled out for the Trailer Task List
+        </p>
+      </div>
+
       {/* Electrical System Section */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="bg-yellow-50 border-b border-yellow-200 px-6 py-4">
