@@ -80,7 +80,16 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
           {/* Content */}
           <div className="px-6 py-4">
-            <p className="text-sm text-gray-600 leading-relaxed">{message}</p>
+            <div 
+              className="text-sm text-gray-600 leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: message
+                  .replace(/\bStatus\b/g, '<strong>Status</strong>')
+                  .replace(/\bDescription\b/g, '<strong>Description</strong>')
+                  .replace(/\bDone By\b/g, '<strong>Done By</strong>')
+                  .replace(/\bmandatory\b/gi, '<strong style="color: #dc2626;">MANDATORY</strong>')
+              }}
+            />
           </div>
 
           {/* Footer */}
