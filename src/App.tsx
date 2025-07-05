@@ -52,8 +52,11 @@ function App() {
   const [confirmModalTitle, setConfirmModalTitle] = useState('');
   const [confirmModalMessage, setConfirmModalMessage] = useState('');
   const [confirmModalConfirmText, setConfirmModalConfirmText] = useState('');
-  const [confirmModalType, setConfirmModalType] = useState<'archive' | 'unarchive' | 'delete' | 'complete' | 'download'>('archive');
+  const [confirmModalType, setConfirmModalType] = useState<'archive' | 'unarchive' | 'delete' | 'complete' | 'download' | 'discard'>('archive');
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  // Close confirmation modal state
+  const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
   const activeJobCards = getActiveJobCards();
   const archivedJobCards = getArchivedJobCards();
@@ -535,8 +538,20 @@ function App() {
   };
 
   const handleCloseJobCardForm = () => {
+    // Show confirmation modal before closing
+    setIsCloseConfirmModalOpen(true);
+  };
+
+  const handleConfirmCloseForm = () => {
+    // Actually close the form and discard changes
     setIsFormOpen(false);
-    setSelectedCustomerData(null); // Clear customer data when closing form
+    setEditingJobCard(null); // Discard any changes for existing job card
+    setSelectedCustomerData(null); // Clear any pre-filled data for new job card
+    setIsCloseConfirmModalOpen(false);
+  };
+
+  const handleCancelCloseForm = () => {
+    setIsCloseConfirmModalOpen(false);
   };
 
   const getPortalIcon = (portal: PortalType) => {
@@ -1121,15 +1136,34 @@ function App() {
       />
 
       {/* Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={isConfirmModalOpen}
-        onClose={handleCloseConfirmModal}
-        onConfirm={handleConfirmAction}
-        title={confirmModalTitle}
-        message={confirmModalMessage}
-        confirmButtonText={confirmModalConfirmText}
-        type={confirmModalType}
-      />
+      {isConfirmModalOpen && (
+        <ConfirmationModal
+          isOpen={isConfirmModalOpen}
+          onClose={handleCloseConfirmModal}
+          onConfirm={handleConfirmAction}
+          title={confirmModalTitle}
+          message={confirmModalMessage}
+          confirmButtonText={confirmModalConfirmText}
+          type={confirmModalType}
+        />
+      )}
+
+      {/* Close Form Confirmation Modal */}
+      {isCloseConfirmModalOpen && (
+        <ConfirmationModal
+          isOpen={isCloseConfirmModalOpen}
+          onClose={handleCancelCloseForm}
+          onConfirm={handleConfirmCloseForm}
+          title="Discard Changes"
+          message={`Are you sure you want to discard all changes? ${
+            formMode === 'create' 
+              ? 'All information entered for this new job card will be lost.' 
+              : 'All unsaved changes to this job card will be lost.'
+          } This action cannot be undone.`}
+          confirmButtonText="Discard Changes"
+          type="discard"
+        />
+      )}
     </div>
   );
 }
