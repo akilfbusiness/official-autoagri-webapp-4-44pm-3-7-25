@@ -36,7 +36,7 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
     return Array.from({ length: 5 }, () => ({
       id: generateId(),
       task_name: '',
-      status: undefined,
+      status: 'na' as const, // Default status to N/A
       description: '',
       done_by: '',
       hours: 0,
@@ -57,7 +57,7 @@ const OtherTaskListComponent: React.FC<OtherTaskListProps> = ({
     const newTask: OtherTaskProgress = {
       id: generateId(),
       task_name: '',
-      status: undefined,
+      status: 'na' as const, // Default status to N/A
       description: '',
       done_by: '',
       hours: 0,

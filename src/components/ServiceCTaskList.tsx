@@ -96,7 +96,13 @@ export const ServiceCTaskList: React.FC<ServiceCTaskListProps> = ({
   const isViewMode = mode === 'view';
 
   const getTaskProgress = (taskName: string): ServiceTaskProgress => {
-    return currentProgress.find(p => p.task_name === taskName) || { task_name: taskName };
+    return currentProgress.find(p => p.task_name === taskName) || { 
+      task_name: taskName, 
+      status: 'na', // Default status to N/A
+      description: '',
+      done_by: '',
+      hours: 0
+    };
   };
 
   const updateTaskProgress = (taskName: string, field: keyof ServiceTaskProgress, value: any) => {
@@ -118,6 +124,10 @@ export const ServiceCTaskList: React.FC<ServiceCTaskListProps> = ({
       // Add new task
       updatedProgress.push({
         task_name: taskName,
+        status: 'na', // Default status to N/A for new tasks
+        description: '',
+        done_by: '',
+        hours: 0,
         [field]: value
       });
     }
