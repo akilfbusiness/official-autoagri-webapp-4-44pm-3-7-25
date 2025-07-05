@@ -198,64 +198,6 @@ function App() {
   
   const currentJobCards = activeTab === 'active' ? activeJobCards : archivedJobCards.slice(0, 5); // Limit archived to 5
 
-  // Validation function for mandatory fields
-  const validateMandatoryFields = (jobCard: JobCard): { isValid: boolean; message: string } => {
-    const errors: string[] = [];
-    
-    // Check Service A, B, C, D tasks
-    if (jobCard.service_selection && ['Service A', 'Service B', 'Service C', 'Service D'].includes(jobCard.service_selection)) {
-      const serviceProgress = jobCard.service_progress || [];
-      const incompleteTasks = serviceProgress.filter(task => 
-        !task.status || !task.description?.trim() || !task.done_by?.trim()
-      );
-      
-      if (incompleteTasks.length > 0) {
-        errors.push(`${jobCard.service_selection} has ${incompleteTasks.length} incomplete task(s) with missing Status, Description, or Done By fields.`);
-      }
-    }
-    
-    // Check Trailer tasks
-    if (jobCard.vehicle_type?.includes('Trailer')) {
-      const trailerProgress = jobCard.trailer_progress?.[0];
-      if (trailerProgress) {
-        const allTrailerTasks = [
-          ...(trailerProgress.electrical_tasks || []),
-          ...(trailerProgress.tires_wheels_tasks || []),
-          ...(trailerProgress.brake_system_tasks || []),
-          ...(trailerProgress.suspension_tasks || []),
-          ...(trailerProgress.body_chassis_tasks || [])
-        ];
-        
-        const incompleteTrailerTasks = allTrailerTasks.filter(task => 
-          !task.status || !task.description?.trim() || !task.done_by?.trim()
-        );
-        
-        if (incompleteTrailerTasks.length > 0) {
-          errors.push(`Trailer Task List has ${incompleteTrailerTasks.length} incomplete task(s) with missing Status, Description, or Done By fields.`);
-        }
-      }
-    }
-    
-    // Check Other tasks
-    if (jobCard.vehicle_type?.includes('Other')) {
-      const otherProgress = jobCard.other_progress || [];
-      const incompleteOtherTasks = otherProgress.filter(task => 
-        !task.status || !task.description?.trim() || !task.done_by?.trim()
-      );
-      
-      if (incompleteOtherTasks.length > 0) {
-        errors.push(`Other Task List has ${incompleteOtherTasks.length} incomplete task(s) with missing Status, Description, or Done By fields.`);
-      }
-    }
-    
-    if (errors.length > 0) {
-      const message = `Cannot complete job card. The following mandatory fields are missing:<br><br>${errors.map(error => `• ${error}`).join('<br>')}<br><br>Please ensure all Status, Description, and Done By fields are completed before marking this job as finished.`;
-      return { isValid: false, message };
-    }
-    
-    return { isValid: true, message: '' };
-  };
-
   const handleCreateNew = () => {
     // Open customer selection modal instead of directly opening the form
     setIsCustomerSelectionOpen(true);
