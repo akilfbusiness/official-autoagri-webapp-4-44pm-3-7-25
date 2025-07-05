@@ -56,13 +56,10 @@ function App() {
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [formResetKey, setFormResetKey] = useState(0);
   const [skipCloseConfirmation, setSkipCloseConfirmation] = useState(false);
-  const [formResetKey, setFormResetKey] = useState(0);
 
   // Close confirmation modal state
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
-  // Close confirmation modal state
-  const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
   const activeJobCards = getActiveJobCards();
   const archivedJobCards = getArchivedJobCards();
