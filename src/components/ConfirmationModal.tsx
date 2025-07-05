@@ -36,6 +36,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         return <Download className="h-6 w-6 text-blue-600" />;
       case 'discard':
         return <X className="h-6 w-6 text-red-600" />;
+      case 'discard':
+        return <X className="h-6 w-6 text-red-600" />;
       default:
         return <AlertTriangle className="h-6 w-6 text-amber-600" />;
     }
@@ -53,6 +55,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         return 'bg-green-600 hover:bg-green-700 focus:ring-green-500';
       case 'download':
         return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
+      case 'discard':
+        return 'bg-red-600 hover:bg-red-700 focus:ring-red-500';
       case 'discard':
         return 'bg-red-600 hover:bg-red-700 focus:ring-red-500';
       default:

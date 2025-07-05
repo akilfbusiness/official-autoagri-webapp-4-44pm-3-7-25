@@ -57,6 +57,13 @@ function App() {
 
   // Close confirmation modal state
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
+  const [shouldConfirmDiscard, setShouldConfirmDiscard] = useState(true);
+
+  // Form key for forcing re-initialization
+  const [newJobCardFormKey, setNewJobCardFormKey] = useState(0);
+
+  // Close confirmation modal state
+  const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
   // Form key for forcing re-initialization
   const [newJobCardFormKey, setNewJobCardFormKey] = useState(0);
@@ -70,6 +77,7 @@ function App() {
 
   const handleCreateNew = () => {
     // Open customer selection modal instead of directly opening the form
+    setShouldConfirmDiscard(true); // Enable discard confirmation for new job cards
     setNewJobCardFormKey(prev => prev + 1); // Force form reset for new job card
     setIsCustomerSelectionOpen(true);
   };
@@ -78,6 +86,7 @@ function App() {
     // User selected "New Customer" - clear any existing customer data and open form
     setSelectedCustomerData(null);
     setFormMode('create');
+    setShouldConfirmDiscard(true); // Enable discard confirmation
     setEditingJobCard(null);
     setActiveFormTab('information');
     setIsFormOpen(true);
@@ -87,6 +96,7 @@ function App() {
     // User selected an existing customer - store the data and open form
     setSelectedCustomerData(customerData);
     setFormMode('create');
+    setShouldConfirmDiscard(true); // Enable discard confirmation
     setEditingJobCard(null);
     setActiveFormTab('information');
     setIsFormOpen(true);
@@ -100,6 +110,7 @@ function App() {
         if (detailedJobCard) {
           setSelectedCustomerData(null); // Clear any existing customer data for edits
           setFormMode('edit');
+          setShouldConfirmDiscard(true); // Enable discard confirmation
           setEditingJobCard(detailedJobCard);
           setActiveFormTab('information');
           setIsFormOpen(true);
@@ -122,6 +133,7 @@ function App() {
         if (detailedJobCard) {
           setSelectedCustomerData(null); // Clear any existing customer data for views
           setFormMode('view');
+          setShouldConfirmDiscard(true); // Enable discard confirmation
           setEditingJobCard(detailedJobCard);
           setActiveFormTab('information');
           setIsFormOpen(true);
@@ -145,6 +157,7 @@ function App() {
         if (detailedJobCard) {
           setSelectedCustomerData(null); // Clear any existing customer data
           setFormMode('mechanic');
+          setShouldConfirmDiscard(true); // Enable discard confirmation
           setEditingJobCard(detailedJobCard);
           setActiveFormTab('mechanic');
           setIsFormOpen(true);
@@ -168,6 +181,7 @@ function App() {
         if (detailedJobCard) {
           setSelectedCustomerData(null); // Clear any existing customer data
           setFormMode('parts');
+          setShouldConfirmDiscard(true); // Enable discard confirmation
           setEditingJobCard(detailedJobCard);
           setActiveFormTab('parts');
           setIsFormOpen(true);
@@ -407,6 +421,9 @@ function App() {
 
   const handleFormSave = async (formData: JobCardFormData) => {
     try {
+      // Disable discard confirmation since we're saving
+      setShouldConfirmDiscard(false);
+      
       console.log('App.tsx - Form data received:', formData.service_progress);
       console.log('App.tsx - Form data received:', formData.trailer_progress);
       console.log('App.tsx - Form data received:', formData.other_progress);
@@ -532,18 +549,47 @@ function App() {
         });
       }
 
-      // Clear selected customer data after successful save
+      // After successful save, close the form without confirmation
+      setIsFormOpen(false);
+      setEditingJobCard(null);
       setSelectedCustomerData(null);
+      setNewJobCardFormKey(prev => prev + 1); // Force form reset for next new job card
+      setShouldConfirmDiscard(true); // Reset for next interaction
     } catch (error) {
       console.error('Error saving job card:', error);
+      // Re-enable discard confirmation since save failed
+      setShouldConfirmDiscard(true);
       alert('Error saving job card. Please try again.');
       throw error; // Re-throw to prevent form from closing
     }
   };
 
   const handleCloseJobCardForm = () => {
-    // Show confirmation modal before closing
-    setIsCloseConfirmModalOpen(true);
+    // Check if we should show discard confirmation
+    if (shouldConfirmDiscard) {
+      setIsCloseConfirmModalOpen(true);
+    } else {
+      // Close directly without confirmation (after successful save)
+      setIsFormOpen(false);
+      setEditingJobCard(null);
+      setSelectedCustomerData(null);
+      setNewJobCardFormKey(prev => prev + 1);
+      setShouldConfirmDiscard(true); // Reset for next interaction
+    }
+  };
+
+  const handleConfirmCloseForm = () => {
+    // Actually close the form and discard changes
+    setIsFormOpen(false);
+    setEditingJobCard(null); // Discard any changes for existing job card
+    setSelectedCustomerData(null); // Clear any pre-filled data for new job card
+    setNewJobCardFormKey(prev => prev + 1); // Force form reset for next new job card
+    setIsCloseConfirmModalOpen(false);
+    setShouldConfirmDiscard(true); // Reset for next interaction
+  };
+
+  const handleCancelCloseForm = () => {
+    setIsCloseConfirmModalOpen(false);
   };
 
   const handleConfirmCloseForm = () => {
@@ -1129,6 +1175,7 @@ function App() {
       {/* Job Card Form Modal */}
       <JobCardForm
         key={editingJobCard ? editingJobCard.id : `new-${newJobCardFormKey}`}
+        key={editingJobCard ? editingJobCard.id : `new-${newJobCardFormKey}`}
         isOpen={isFormOpen}
         onClose={handleCloseJobCardForm}
         onSave={handleFormSave}
@@ -1151,6 +1198,25 @@ function App() {
           message={confirmModalMessage}
           confirmButtonText={confirmModalConfirmText}
           type={confirmModalType}
+        />
+      )}
+
+      {/* Close Form Confirmation Modal */}
+      {isCloseConfirmModalOpen && (
+        <ConfirmationModal
+          isOpen={isCloseConfirmModalOpen}
+          onClose={handleCancelCloseForm}
+          onConfirm={handleConfirmCloseForm}
+          title="Discard Changes"
+          message={`Are you sure you want to discard all changes? ${
+            formMode === 'create' 
+              ? 'All information entered for this new job card will be lost.' 
+              : 'All unsaved changes to this job card will be lost.'
+          } This action cannot be undone.`}
+          confirmButtonText="Discard Changes"
+          type="discard"
+        />
+      )}
         />
       )}
 
