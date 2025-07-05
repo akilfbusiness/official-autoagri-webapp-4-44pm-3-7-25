@@ -345,6 +345,26 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
   const endIndex = startIndex + itemsPerPage;
   const paginatedJobCards = filteredAndSortedJobCards.slice(startIndex, endIndex);
 
+  // Determine if pagination should be shown
+  const shouldShowPagination = filteredAndSortedJobCards.length > 10;
+
+  // Helper functions for pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   // Reset to first page when search term changes
   useEffect(() => {
     setCurrentPage(1);
@@ -874,24 +894,4 @@ export const DatabaseContent: React.FC<DatabaseContentProps> = ({
       )}
     </div>
   );
-
-  // Helper functions for pagination
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  // Determine if pagination should be shown
-  const shouldShowPagination = filteredAndSortedJobCards.length > 10;
 };
