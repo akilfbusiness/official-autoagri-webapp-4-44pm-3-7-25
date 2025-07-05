@@ -5,6 +5,8 @@ import { OtherTaskProgress } from '../types/JobCard';
 interface OtherTaskRowProps {
   task: OtherTaskProgress;
   isViewMode: boolean;
+  isMandatoryCheckActive?: boolean;
+  invalidFields?: { status?: boolean; description?: boolean; done_by?: boolean };
   onUpdate: (id: string, field: keyof OtherTaskProgress, value: any) => void;
   onRemove: (id: string) => void;
 }
@@ -12,6 +14,8 @@ interface OtherTaskRowProps {
 export const OtherTaskRow: React.FC<OtherTaskRowProps> = React.memo(({
   task,
   isViewMode,
+  isMandatoryCheckActive = false,
+  invalidFields = {},
   onUpdate,
   onRemove,
 }) => {
@@ -30,7 +34,8 @@ export const OtherTaskRow: React.FC<OtherTaskRowProps> = React.memo(({
     const handleClick = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      handleFieldChange('status', isSelected ? undefined : status);
+      // Always set the chosen status (don't allow unsetting)
+      handleFieldChange('status', status);
     };
     
     return (
@@ -49,6 +54,12 @@ export const OtherTaskRow: React.FC<OtherTaskRowProps> = React.memo(({
       </button>
     );
   };
+
+  const MandatoryIndicator: React.FC = () => (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 ml-2">
+      MANDATORY
+    </span>
+  );
 
   return (
     <tr className="hover:bg-gray-50 transition-colors">
@@ -85,6 +96,7 @@ export const OtherTaskRow: React.FC<OtherTaskRowProps> = React.memo(({
             colorClass="text-gray-600 bg-gray-50"
           />
         </div>
+        {isMandatoryCheckActive && invalidFields.status && <MandatoryIndicator />}
       </td>
       <td className="px-4 py-4 align-top">
         <textarea
@@ -95,8 +107,9 @@ export const OtherTaskRow: React.FC<OtherTaskRowProps> = React.memo(({
           rows={2}
           className={`w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors resize-y min-h-[2.5rem] ${
             isViewMode ? 'bg-gray-50' : ''
-          }`}
+          } ${isMandatoryCheckActive && invalidFields.description ? 'border-red-300 focus:ring-red-500' : ''}`}
         />
+        {isMandatoryCheckActive && invalidFields.description && <MandatoryIndicator />}
       </td>
       <td className="px-4 py-4 align-top">
         <input
@@ -107,8 +120,9 @@ export const OtherTaskRow: React.FC<OtherTaskRowProps> = React.memo(({
           placeholder="Mechanic name"
           className={`w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
             isViewMode ? 'bg-gray-50' : ''
-          }`}
+          } ${isMandatoryCheckActive && invalidFields.done_by ? 'border-red-300 focus:ring-red-500' : ''}`}
         />
+        {isMandatoryCheckActive && invalidFields.done_by && <MandatoryIndicator />}
       </td>
       <td className="px-4 py-4 align-top">
         <input
