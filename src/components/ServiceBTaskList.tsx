@@ -8,6 +8,8 @@ interface ServiceBTaskListProps {
   mode: 'create' | 'edit' | 'view';
   currentProgress?: ServiceTaskProgress[];
   onProgressChange?: (progress: ServiceTaskProgress[]) => void;
+  isMandatoryCheckActive?: boolean;
+  initialInvalidFields?: { [taskName: string]: { status?: boolean; description?: boolean; done_by?: boolean } };
 }
 
 const SERVICE_B_TASKS = [
@@ -79,6 +81,8 @@ export const ServiceBTaskList: React.FC<ServiceBTaskListProps> = ({
   mode,
   currentProgress = [],
   onProgressChange,
+  isMandatoryCheckActive = false,
+  initialInvalidFields = {},
 }) => {
   // Only show if Service B is selected
   if (serviceSelection !== 'Service B') {
@@ -127,6 +131,13 @@ export const ServiceBTaskList: React.FC<ServiceBTaskListProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Mandatory Fields Notice */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <p className="text-sm text-gray-700">
+          ALL <span className="font-bold text-black">Status</span>, <span className="font-bold text-black">Description</span> and <span className="font-bold text-black">Done By</span> fields are <span className="font-bold text-red-600">MANDATORY</span>, and need to be filled out for the Service B Task List
+        </p>
+      </div>
+
       <div className="border-b border-gray-200 pb-2">
         <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
           <Settings className="h-5 w-5 text-purple-600" />
@@ -168,6 +179,8 @@ export const ServiceBTaskList: React.FC<ServiceBTaskListProps> = ({
                   index={index}
                   progress={getTaskProgress(task)}
                   isViewMode={isViewMode}
+                  isMandatoryCheckActive={isMandatoryCheckActive}
+                  invalidFields={initialInvalidFields[task] || {}}
                   onUpdate={updateTaskProgress}
                 />
               ))}
@@ -184,6 +197,11 @@ export const ServiceBTaskList: React.FC<ServiceBTaskListProps> = ({
             <p className="text-sm text-purple-700 mt-1">
               Complete all {SERVICE_B_TASKS.length} tasks and mark their status. Add descriptions for any issues found
               and record the mechanic who performed each task along with time spent.
+              {isMandatoryCheckActive && (
+                <span className="block mt-2 font-medium text-red-700">
+                  Note: Status, Description, and Done By fields are mandatory for completion.
+                </span>
+              )}
             </p>
           </div>
         </div>
