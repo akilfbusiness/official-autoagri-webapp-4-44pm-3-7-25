@@ -9,31 +9,46 @@ export interface ServiceTaskProgress {
 export interface TrailerElectricalTask {
   name: string;
   task: string;
-  remarks?: string;
+  status?: 'tick' | 'no' | 'na';
+  description?: string;
+  done_by?: string;
+  hours?: number;
 }
 
 export interface TrailerTiresWheelsTask {
   name: string;
   task: string;
-  remarks?: string;
+  status?: 'tick' | 'no' | 'na';
+  description?: string;
+  done_by?: string;
+  hours?: number;
 }
 
 export interface TrailerBrakeSystemTask {
   name: string;
   task: string;
-  remarks?: string;
+  status?: 'tick' | 'no' | 'na';
+  description?: string;
+  done_by?: string;
+  hours?: number;
 }
 
 export interface TrailerSuspensionTask {
   name: string;
   task: string;
-  remarks?: string;
+  status?: 'tick' | 'no' | 'na';
+  description?: string;
+  done_by?: string;
+  hours?: number;
 }
 
 export interface TrailerBodyChassisTask {
   name: string;
   task: string;
-  remarks?: string;
+  status?: 'tick' | 'no' | 'na';
+  description?: string;
+  done_by?: string;
+  hours?: number;
 }
 
 export interface TrailerTaskProgress {
