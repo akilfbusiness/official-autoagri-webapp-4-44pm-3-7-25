@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Eye, X, Check, ChevronUp, ChevronDown, Filter, SortAsc, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, X, Check, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { JobCard } from '../types/JobCard';
 import { ActionDropdown } from './ActionDropdown';
 
@@ -13,26 +13,15 @@ interface JobCardTableProps {
   onCreateNew: () => void;
   onToggleWorkerCompletion?: (jobCard: JobCard, isComplete: boolean) => void;
   onTogglePartsCompletion?: (jobCard: JobCard, isComplete: boolean) => void;
-  onGenerateInvoiceAndSendWebhook?: (jobCard: JobCard) => void; // New prop for webhook functionality
+  onGenerateInvoiceAndSendWebhook?: (jobCard: JobCard) => void;
   isLoading: boolean;
-  isArchivedView?: boolean; // New prop to determine if this is the archived view
-  onConfirmDownload?: (jobCard: JobCard) => void; // New prop for download confirmation
+  isArchivedView?: boolean;
+  onConfirmDownload?: (jobCard: JobCard) => void;
 }
 
 type SortConfig = {
   key: keyof JobCard | null;
   direction: 'asc' | 'desc';
-};
-
-type FilterConfig = {
-  // Job card creation date filters
-  month: string;
-  year: string;
-  filterType: 'all' | 'month-year' | 'year-only';
-  // Vehicle manufacture date filters
-  vehicleManufactureMonth: string;
-  vehicleManufactureYear: string;
-  vehicleManufactureFilterType: 'all' | 'month-year' | 'year-only';
 };
 
 export const JobCardTable: React.FC<JobCardTableProps> = ({
@@ -52,43 +41,8 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
-  const [filterConfig, setFilterConfig] = useState<FilterConfig>({
-    month: '',
-    year: '',
-    filterType: 'all',
-    vehicleManufactureMonth: '',
-    vehicleManufactureYear: '',
-    vehicleManufactureFilterType: 'all'
-  });
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-
-  // Pagination state - now applies to both active and archived views
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
-
-  // Generate year options for job card creation date (current year and past 5 years)
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 6 }, (_, i) => currentYear - i);
-
-  // Generate year options for vehicle manufacture date (1900 to 2100)
-  const vehicleYearOptions = Array.from({ length: 2100 - 1900 + 1 }, (_, i) => 2100 - i);
-
-  // Month options
-  const monthOptions = [
-    { value: '01', label: 'January' },
-    { value: '02', label: 'February' },
-    { value: '03', label: 'March' },
-    { value: '04', label: 'April' },
-    { value: '05', label: 'May' },
-    { value: '06', label: 'June' },
-    { value: '07', label: 'July' },
-    { value: '08', label: 'August' },
-    { value: '09', label: 'September' },
-    { value: '10', label: 'October' },
-    { value: '11', label: 'November' },
-    { value: '12', label: 'December' },
-  ];
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const requestSort = (key: keyof JobCard) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -96,57 +50,6 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
       direction = 'desc';
     }
     setSortConfig({ key, direction });
-    // Reset to first page when sorting
-    setCurrentPage(1);
-  };
-
-  const handleDateSort = (direction: 'asc' | 'desc') => {
-    setSortConfig({ key: 'created_at', direction });
-    setShowSortDropdown(false);
-    // Reset to first page when sorting
-    setCurrentPage(1);
-  };
-
-  const handleJobCardFilterChange = (type: 'month-year' | 'year-only' | 'all') => {
-    setFilterConfig(prev => ({ ...prev, filterType: type }));
-    if (type === 'all') {
-      setFilterConfig(prev => ({ ...prev, month: '', year: '', filterType: 'all' }));
-    }
-    // Reset to first page when filtering
-    setCurrentPage(1);
-  };
-
-  const handleVehicleManufactureFilterChange = (type: 'month-year' | 'year-only' | 'all') => {
-    setFilterConfig(prev => ({ ...prev, vehicleManufactureFilterType: type }));
-    if (type === 'all') {
-      setFilterConfig(prev => ({ 
-        ...prev, 
-        vehicleManufactureMonth: '', 
-        vehicleManufactureYear: '', 
-        vehicleManufactureFilterType: 'all' 
-      }));
-    }
-    // Reset to first page when filtering
-    setCurrentPage(1);
-  };
-
-  const applyFilter = () => {
-    setShowFilterDropdown(false);
-    // Reset to first page when applying filters
-    setCurrentPage(1);
-  };
-
-  const clearFilter = () => {
-    setFilterConfig({ 
-      month: '', 
-      year: '', 
-      filterType: 'all',
-      vehicleManufactureMonth: '',
-      vehicleManufactureYear: '',
-      vehicleManufactureFilterType: 'all'
-    });
-    setShowFilterDropdown(false);
-    // Reset to first page when clearing filters
     setCurrentPage(1);
   };
 
@@ -163,48 +66,23 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
     let filtered = jobCards.filter(card => {
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = (
-        card.job_number?.toLowerCase().includes(searchLower) ||
-        card.id.toLowerCase().includes(searchLower) ||
+        // Customer Name
         card.customer_name?.toLowerCase().includes(searchLower) ||
+        // Company Name
         card.company_name?.toLowerCase().includes(searchLower) ||
+        // Mobile
+        card.mobile?.toLowerCase().includes(searchLower) ||
+        // REGO
         card.rego?.toLowerCase().includes(searchLower) ||
-        card.mobile?.toLowerCase().includes(searchLower)
+        // Invoice Number
+        card.invoice_number?.toLowerCase().includes(searchLower) ||
+        // Job Number
+        card.job_number?.toLowerCase().includes(searchLower) ||
+        // Keep ID search for backward compatibility
+        card.id.toLowerCase().includes(searchLower)
       );
 
-      if (!matchesSearch) return false;
-
-      // Apply job card creation date filter
-      if (filterConfig.filterType !== 'all') {
-        const cardDate = new Date(card.created_at);
-        const cardYear = cardDate.getFullYear().toString();
-        const cardMonth = (cardDate.getMonth() + 1).toString().padStart(2, '0');
-
-        if (filterConfig.filterType === 'year-only' && filterConfig.year) {
-          if (cardYear !== filterConfig.year) return false;
-        }
-
-        if (filterConfig.filterType === 'month-year' && filterConfig.year && filterConfig.month) {
-          if (cardYear !== filterConfig.year || cardMonth !== filterConfig.month) return false;
-        }
-      }
-
-      // Apply vehicle manufacture date filter
-      if (filterConfig.vehicleManufactureFilterType !== 'all') {
-        const vehicleYear = card.vehicle_year?.toString();
-        const vehicleMonth = card.vehicle_month?.padStart(2, '0');
-
-        if (filterConfig.vehicleManufactureFilterType === 'year-only' && filterConfig.vehicleManufactureYear) {
-          if (vehicleYear !== filterConfig.vehicleManufactureYear) return false;
-        }
-
-        if (filterConfig.vehicleManufactureFilterType === 'month-year' && 
-            filterConfig.vehicleManufactureYear && filterConfig.vehicleManufactureMonth) {
-          if (vehicleYear !== filterConfig.vehicleManufactureYear || 
-              vehicleMonth !== filterConfig.vehicleManufactureMonth) return false;
-        }
-      }
-
-      return true;
+      return matchesSearch;
     });
 
     // Apply sorting
@@ -236,7 +114,7 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
     }
 
     return filtered;
-  }, [jobCards, searchTerm, sortConfig, filterConfig]);
+  }, [jobCards, searchTerm, sortConfig]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedJobCards.length / itemsPerPage);
@@ -262,7 +140,7 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to first page when changing items per page
+    setCurrentPage(1);
   };
 
   // Reset to first page when search term changes
@@ -285,6 +163,20 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
   // Helper function to get month name from month number
   const getMonthName = (monthNumber?: string) => {
     if (!monthNumber) return '';
+    const monthOptions = [
+      { value: '01', label: 'January' },
+      { value: '02', label: 'February' },
+      { value: '03', label: 'March' },
+      { value: '04', label: 'April' },
+      { value: '05', label: 'May' },
+      { value: '06', label: 'June' },
+      { value: '07', label: 'July' },
+      { value: '08', label: 'August' },
+      { value: '09', label: 'September' },
+      { value: '10', label: 'October' },
+      { value: '11', label: 'November' },
+      { value: '12', label: 'December' },
+    ];
     const month = monthOptions.find(m => m.value === monthNumber.padStart(2, '0'));
     return month ? month.label : monthNumber;
   };
@@ -324,269 +216,43 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
   }
 
   // Determine if pagination should be shown (when there are more than the minimum items per page option)
-  const shouldShowPagination = filteredAndSortedJobCards.length > 5; // Show if more than 5 items total
+  const shouldShowPagination = filteredAndSortedJobCards.length > 5;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <input
-            type="text"
-            placeholder="Search job cards..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+      {/* Only show search bar for non-archived views (Dashboard) */}
+      {!isArchivedView && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <input
+              type="text"
+              placeholder="Search job cards..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
 
-        {/* Pagination Controls and Filters */}
-        <div className="flex items-center gap-3">
-          {/* Items per page selector */}
-          {shouldShowPagination && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Show:</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-              </select>
-              <span className="text-sm text-gray-600">per page</span>
-            </div>
-          )}
-
-          {/* Sort and Filter buttons for archived view */}
-          {isArchivedView && (
-            <div className="flex gap-2">
-              {/* Sort Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          {/* Pagination Controls for Dashboard */}
+          <div className="flex items-center gap-3">
+            {shouldShowPagination && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Show:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <SortAsc className="h-4 w-4" />
-                  Sort
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-
-                {showSortDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                    <div className="py-1">
-                      <button
-                        onClick={() => handleDateSort('desc')}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        Newest First
-                      </button>
-                      <button
-                        onClick={() => handleDateSort('asc')}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        Oldest First
-                      </button>
-                    </div>
-                  </div>
-                )}
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                </select>
+                <span className="text-sm text-gray-600">per page</span>
               </div>
-
-              {/* Filter Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Filter className="h-4 w-4" />
-                  Filter
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-
-                {showFilterDropdown && (
-                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                    <div className="p-4 space-y-6">
-                      {/* Job Card Creation Date Filter */}
-                      <div className="space-y-4">
-                        <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-blue-600" />
-                          Filter by Job Card Date
-                        </h3>
-                        
-                        <div className="space-y-3">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="jobCardFilterType"
-                              checked={filterConfig.filterType === 'all'}
-                              onChange={() => handleJobCardFilterChange('all')}
-                              className="mr-2"
-                            />
-                            <span className="text-sm">Show All</span>
-                          </label>
-
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="jobCardFilterType"
-                              checked={filterConfig.filterType === 'year-only'}
-                              onChange={() => handleJobCardFilterChange('year-only')}
-                              className="mr-2"
-                            />
-                            <span className="text-sm">Year Only</span>
-                          </label>
-
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="jobCardFilterType"
-                              checked={filterConfig.filterType === 'month-year'}
-                              onChange={() => handleJobCardFilterChange('month-year')}
-                              className="mr-2"
-                            />
-                            <span className="text-sm">Specific Month and Year</span>
-                          </label>
-                        </div>
-
-                        {(filterConfig.filterType === 'year-only' || filterConfig.filterType === 'month-year') && (
-                          <div className="space-y-3 pl-4 border-l-2 border-blue-200">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                              <select
-                                value={filterConfig.year}
-                                onChange={(e) => setFilterConfig(prev => ({ ...prev, year: e.target.value }))}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              >
-                                <option value="">Select Year</option>
-                                {yearOptions.map(year => (
-                                  <option key={year} value={year.toString()}>{year}</option>
-                                ))}
-                              </select>
-                            </div>
-
-                            {filterConfig.filterType === 'month-year' && (
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
-                                <select
-                                  value={filterConfig.month}
-                                  onChange={(e) => setFilterConfig(prev => ({ ...prev, month: e.target.value }))}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                  <option value="">Select Month</option>
-                                  {monthOptions.map(month => (
-                                    <option key={month.value} value={month.value}>{month.label}</option>
-                                  ))}
-                                </select>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Divider */}
-                      <div className="border-t border-gray-200"></div>
-
-                      {/* Vehicle Manufacture Date Filter */}
-                      <div className="space-y-4">
-                        <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-green-600" />
-                          Filter by Vehicle Manufacture Date
-                        </h3>
-                        
-                        <div className="space-y-3">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="vehicleManufactureFilterType"
-                              checked={filterConfig.vehicleManufactureFilterType === 'all'}
-                              onChange={() => handleVehicleManufactureFilterChange('all')}
-                              className="mr-2"
-                            />
-                            <span className="text-sm">Show All</span>
-                          </label>
-
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="vehicleManufactureFilterType"
-                              checked={filterConfig.vehicleManufactureFilterType === 'year-only'}
-                              onChange={() => handleVehicleManufactureFilterChange('year-only')}
-                              className="mr-2"
-                            />
-                            <span className="text-sm">Year Only</span>
-                          </label>
-
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="vehicleManufactureFilterType"
-                              checked={filterConfig.vehicleManufactureFilterType === 'month-year'}
-                              onChange={() => handleVehicleManufactureFilterChange('month-year')}
-                              className="mr-2"
-                            />
-                            <span className="text-sm">Specific Month and Year</span>
-                          </label>
-                        </div>
-
-                        {(filterConfig.vehicleManufactureFilterType === 'year-only' || filterConfig.vehicleManufactureFilterType === 'month-year') && (
-                          <div className="space-y-3 pl-4 border-l-2 border-green-200">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Year</label>
-                              <select
-                                value={filterConfig.vehicleManufactureYear}
-                                onChange={(e) => setFilterConfig(prev => ({ ...prev, vehicleManufactureYear: e.target.value }))}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              >
-                                <option value="">Select Year</option>
-                                {vehicleYearOptions.map(year => (
-                                  <option key={year} value={year.toString()}>{year}</option>
-                                ))}
-                              </select>
-                            </div>
-
-                            {filterConfig.vehicleManufactureFilterType === 'month-year' && (
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Month</label>
-                                <select
-                                  value={filterConfig.vehicleManufactureMonth}
-                                  onChange={(e) => setFilterConfig(prev => ({ ...prev, vehicleManufactureMonth: e.target.value }))}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                >
-                                  <option value="">Select Month</option>
-                                  {monthOptions.map(month => (
-                                    <option key={month.value} value={month.value}>{month.label}</option>
-                                  ))}
-                                </select>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2 pt-2">
-                        <button
-                          onClick={applyFilter}
-                          className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                          Apply
-                        </button>
-                        <button
-                          onClick={clearFilter}
-                          className="flex-1 px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Table Container */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]">
@@ -662,7 +328,7 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
                   <td colSpan={isArchivedView ? 7 : 6} className="px-6 py-16 text-center text-gray-500">
                     <div className="flex flex-col items-center justify-center space-y-3">
                       <div className="text-gray-400">
-                        <Search className="h-12 w-12 mx-auto mb-4" />
+                        <Eye className="h-12 w-12 mx-auto mb-4" />
                       </div>
                       <p className="text-lg font-medium">
                         {jobCards.length === 0 ? 'No job cards found' : 'No job cards match your search'}
@@ -874,32 +540,7 @@ export const JobCardTable: React.FC<JobCardTableProps> = ({
             `Showing ${filteredAndSortedJobCards.length} of ${jobCards.length} job cards`
           }
         </span>
-        {isArchivedView && (filterConfig.filterType !== 'all' || filterConfig.vehicleManufactureFilterType !== 'all') && (
-          <div className="flex gap-4 text-xs">
-            {filterConfig.filterType !== 'all' && (
-              <span className="text-blue-600">
-                Job Card: {filterConfig.filterType === 'year-only' ? 'year' : 'month and year'}
-              </span>
-            )}
-            {filterConfig.vehicleManufactureFilterType !== 'all' && (
-              <span className="text-green-600">
-                Vehicle: {filterConfig.vehicleManufactureFilterType === 'year-only' ? 'year' : 'month and year'}
-              </span>
-            )}
-          </div>
-        )}
       </div>
-
-      {/* Click outside handlers */}
-      {(showSortDropdown || showFilterDropdown) && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => {
-            setShowSortDropdown(false);
-            setShowFilterDropdown(false);
-          }}
-        />
-      )}
     </div>
   );
 };
