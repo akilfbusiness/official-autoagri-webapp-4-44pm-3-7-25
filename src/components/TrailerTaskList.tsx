@@ -67,16 +67,12 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
   isMandatoryCheckActive = false,
   initialInvalidFields = {},
 }) => {
-  // Only show if Trailer is selected
-  if (!vehicleType?.includes('Trailer')) {
-    return null;
-  }
-
+  const shouldShow = vehicleType?.includes('Trailer');
   const isViewMode = mode === 'view';
 
   // Initialize trailer progress if needed
   useEffect(() => {
-    if (vehicleType?.includes('Trailer') && currentProgress.length === 0 && (mode === 'create' || mode === 'edit') && onProgressChange) {
+    if (shouldShow && currentProgress.length === 0 && (mode === 'create' || mode === 'edit') && onProgressChange) {
       const initialTrailerProgress: TrailerTaskProgress = {
         trailer_date: undefined,
         trailer_kms: undefined,
@@ -125,7 +121,7 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
       
       onProgressChange([initialTrailerProgress]);
     }
-  }, [vehicleType, currentProgress.length, mode, onProgressChange]);
+  }, [shouldShow, currentProgress.length, mode, onProgressChange]);
 
   // Get the first (and likely only) trailer progress entry
   const trailerProgress = currentProgress[0] || {};
@@ -316,6 +312,8 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
   };
 
   return (
+    <>
+      {shouldShow ? (
     <div className="space-y-6">
       <div className="border-b border-gray-200 pb-2">
         <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
@@ -658,5 +656,7 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
         </div>
       </div>
     </div>
+      ) : null}
+    </>
   );
 };
