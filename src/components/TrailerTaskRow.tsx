@@ -12,6 +12,8 @@ interface TrailerTaskRowProps {
   };
   index: number;
   isViewMode: boolean;
+  isMandatoryCheckActive: boolean;
+  invalidFields: { status?: boolean; description?: boolean; done_by?: boolean };
   onUpdate: (index: number, field: string, value: any) => void;
 }
 
@@ -19,6 +21,8 @@ export const TrailerTaskRow: React.FC<TrailerTaskRowProps> = React.memo(({
   task,
   index,
   isViewMode,
+  isMandatoryCheckActive,
+  invalidFields,
   onUpdate,
 }) => {
   const StatusButton: React.FC<{
@@ -32,7 +36,8 @@ export const TrailerTaskRow: React.FC<TrailerTaskRowProps> = React.memo(({
     const handleClick = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      onUpdate(index, 'status', isSelected ? undefined : status);
+      // Prevent unsetting status - always set the chosen status
+      onUpdate(index, 'status', status);
     };
     
     return (
@@ -51,6 +56,12 @@ export const TrailerTaskRow: React.FC<TrailerTaskRowProps> = React.memo(({
       </button>
     );
   };
+
+  const MandatoryIndicator: React.FC = () => (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
+      mandatory
+    </span>
+  );
 
   return (
     <tr className="hover:bg-gray-50 transition-colors">
@@ -84,6 +95,7 @@ export const TrailerTaskRow: React.FC<TrailerTaskRowProps> = React.memo(({
             colorClass="text-gray-600 bg-gray-50"
           />
         </div>
+        {isMandatoryCheckActive && invalidFields.status && <MandatoryIndicator />}
       </td>
       <td className="px-6 py-4 align-top">
         <textarea
@@ -94,21 +106,22 @@ export const TrailerTaskRow: React.FC<TrailerTaskRowProps> = React.memo(({
           rows={2}
           className={`w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-y min-h-[2.5rem] ${
             isViewMode ? 'bg-gray-50' : ''
-          }`}
+          } ${isMandatoryCheckActive && invalidFields.description ? 'border-red-300 focus:ring-red-500' : ''}`}
         />
+        {isMandatoryCheckActive && invalidFields.description && <MandatoryIndicator />}
       </td>
       <td className="px-6 py-4 align-top">
-        <textarea
+        <input
           type="text"
           value={task.done_by || ''}
           onChange={(e) => onUpdate(index, 'done_by', e.target.value)}
           disabled={isViewMode}
           placeholder="Mechanic name"
-          rows={2}
-          className={`w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-y min-h-[2.5rem] ${
+          className={`w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
             isViewMode ? 'bg-gray-50' : ''
-          }`}
+          } ${isMandatoryCheckActive && invalidFields.done_by ? 'border-red-300 focus:ring-red-500' : ''}`}
         />
+        {isMandatoryCheckActive && invalidFields.done_by && <MandatoryIndicator />}
       </td>
       <td className="px-6 py-4 align-top">
         <input

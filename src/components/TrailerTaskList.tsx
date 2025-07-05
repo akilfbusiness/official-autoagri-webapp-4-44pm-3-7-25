@@ -8,47 +8,55 @@ interface TrailerTaskListProps {
   mode: 'create' | 'edit' | 'view';
   currentProgress?: TrailerTaskProgress[];
   onProgressChange?: (progress: TrailerTaskProgress[]) => void;
+  isMandatoryCheckActive?: boolean;
+  initialInvalidFields?: {
+    electrical_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+    tires_wheels_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+    brake_system_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+    suspension_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+    body_chassis_tasks?: { [index: number]: { status?: boolean; description?: boolean; done_by?: boolean } };
+  };
 }
 
 const ELECTRICAL_SYSTEM_TASKS: { name: string; task: string; status?: 'tick' | 'no' | 'na'; description?: string; done_by?: string; hours?: number }[] = [
-  { name: 'Battery', task: 'Check Battery Charge and Switch Operation', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Trailer lights', task: 'Check That All Are Working', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Check plugs', task: 'Check all electrical plugs', status: undefined, description: '', done_by: '', hours: 0 },
+  { name: 'Battery', task: 'Check Battery Charge and Switch Operation', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Trailer lights', task: 'Check That All Are Working', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Check plugs', task: 'Check all electrical plugs', status: 'na', description: '', done_by: '', hours: 0 },
 ];
 
 const TIRES_WHEELS_TASKS: { name: string; task: string; status?: 'tick' | 'no' | 'na'; description?: string; done_by?: string; hours?: number }[] = [
-  { name: 'Tire Pressure', task: 'Inflate to Manufacturer Specifications', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Tire Condition', task: 'Inspect for Cuts, Wear or Bulging', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Wheels', task: 'Tighten to Specified Torque', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Wheel Nuts and Bolts', task: 'Inspect for Cracks, Dents or Distortion', status: undefined, description: '', done_by: '', hours: 0 },
+  { name: 'Tire Pressure', task: 'Inflate to Manufacturer Specifications', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Tire Condition', task: 'Inspect for Cuts, Wear or Bulging', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Wheels', task: 'Tighten to Specified Torque', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Wheel Nuts and Bolts', task: 'Inspect for Cracks, Dents or Distortion', status: 'na', description: '', done_by: '', hours: 0 },
 ];
 
 const BRAKE_SYSTEM_TASKS: { name: string; task: string; status?: 'tick' | 'no' | 'na'; description?: string; done_by?: string; hours?: number }[] = [
-  { name: 'Brakes', task: 'Test for Functionality', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Brake Adjustment', task: 'Adjust to Proper Operating Clearance', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Brake Magnets', task: 'Inspect for Wear and Current Draw', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Brake Linings', task: 'Inspect for Wear or Contamination', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Brake Controller', task: 'Check Settings and Proper Operation', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Brake Cylinders', task: 'Check for Leaks, Sticking', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Brake Lines', task: 'Inspect for Cracks, Leaks or Kinks', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Hubs / Drums', task: 'Inspect for Abnormal Wear or Scoring', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Wheel Bearings & Cups', task: 'Inspect for Corrosion or Wear – Clean and Repack', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Hand brake', task: 'check hand brake cable and adjustment', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'lubrication', task: 'lubricate all grease points', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Brake fluid level', task: 'Check / top up if required', status: undefined, description: '', done_by: '', hours: 0 },
+  { name: 'Brakes', task: 'Test for Functionality', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Brake Adjustment', task: 'Adjust to Proper Operating Clearance', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Brake Magnets', task: 'Inspect for Wear and Current Draw', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Brake Linings', task: 'Inspect for Wear or Contamination', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Brake Controller', task: 'Check Settings and Proper Operation', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Brake Cylinders', task: 'Check for Leaks, Sticking', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Brake Lines', task: 'Inspect for Cracks, Leaks or Kinks', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Hubs / Drums', task: 'Inspect for Abnormal Wear or Scoring', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Wheel Bearings & Cups', task: 'Inspect for Corrosion or Wear – Clean and Repack', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Hand brake', task: 'check hand brake cable and adjustment', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'lubrication', task: 'lubricate all grease points', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Brake fluid level', task: 'Check / top up if required', status: 'na', description: '', done_by: '', hours: 0 },
 ];
 
 const SUSPENSION_TASKS: { name: string; task: string; status?: 'tick' | 'no' | 'na'; description?: string; done_by?: string; hours?: number }[] = [
-  { name: 'Springs', task: 'Inspect for Wear and Loss of Arch', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Suspension Parts', task: 'Inspect for Bending, Loose Fasteners and Wear', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'U-Bolts', task: 'Check for Wear and Confirm Tightness', status: undefined, description: '', done_by: '', hours: 0 },
+  { name: 'Springs', task: 'Inspect for Wear and Loss of Arch', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Suspension Parts', task: 'Inspect for Bending, Loose Fasteners and Wear', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'U-Bolts', task: 'Check for Wear and Confirm Tightness', status: 'na', description: '', done_by: '', hours: 0 },
 ];
 
 const BODY_CHASSIS_TASKS: { name: string; task: string; status?: 'tick' | 'no' | 'na'; description?: string; done_by?: string; hours?: number }[] = [
-  { name: 'Hitch', task: 'Check tow hitch eye wear with in limit', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Hitch mounting', task: 'Check tow hitch mounting and any crack', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Tail Gate', task: 'Check Tail gate pins/safety Chains/safety bars and lubricate', status: undefined, description: '', done_by: '', hours: 0 },
-  { name: 'Landing leg', task: 'Check operation of landing leg', status: undefined, description: '', done_by: '', hours: 0 },
+  { name: 'Hitch', task: 'Check tow hitch eye wear with in limit', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Hitch mounting', task: 'Check tow hitch mounting and any crack', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Tail Gate', task: 'Check Tail gate pins/safety Chains/safety bars and lubricate', status: 'na', description: '', done_by: '', hours: 0 },
+  { name: 'Landing leg', task: 'Check operation of landing leg', status: 'na', description: '', done_by: '', hours: 0 },
 ];
 
 export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
@@ -56,6 +64,8 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
   mode,
   currentProgress = [],
   onProgressChange,
+  isMandatoryCheckActive = false,
+  initialInvalidFields = {},
 }) => {
   // Only show if Trailer is selected
   if (!vehicleType?.includes('Trailer')) {
@@ -417,6 +427,8 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
                   task={task}
                   index={index}
                   isViewMode={isViewMode}
+                  isMandatoryCheckActive={isMandatoryCheckActive}
+                  invalidFields={initialInvalidFields.electrical_tasks?.[index] || {}}
                   onUpdate={updateElectricalTask}
                 />
               ))}
@@ -466,6 +478,8 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
                   task={task}
                   index={index}
                   isViewMode={isViewMode}
+                  isMandatoryCheckActive={isMandatoryCheckActive}
+                  invalidFields={initialInvalidFields.tires_wheels_tasks?.[index] || {}}
                   onUpdate={updateTiresWheelsTask}
                 />
               ))}
@@ -515,6 +529,8 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
                   task={task}
                   index={index}
                   isViewMode={isViewMode}
+                  isMandatoryCheckActive={isMandatoryCheckActive}
+                  invalidFields={initialInvalidFields.brake_system_tasks?.[index] || {}}
                   onUpdate={updateBrakeSystemTask}
                 />
               ))}
@@ -564,6 +580,8 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
                   task={task}
                   index={index}
                   isViewMode={isViewMode}
+                  isMandatoryCheckActive={isMandatoryCheckActive}
+                  invalidFields={initialInvalidFields.suspension_tasks?.[index] || {}}
                   onUpdate={updateSuspensionTask}
                 />
               ))}
@@ -613,6 +631,8 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
                   task={task}
                   index={index}
                   isViewMode={isViewMode}
+                  isMandatoryCheckActive={isMandatoryCheckActive}
+                  invalidFields={initialInvalidFields.body_chassis_tasks?.[index] || {}}
                   onUpdate={updateBodyChassisTask}
                 />
               ))}
@@ -628,6 +648,11 @@ export const TrailerTaskList: React.FC<TrailerTaskListProps> = ({
             <h4 className="text-sm font-medium text-indigo-900">Trailer Checklist Progress</h4>
             <p className="text-sm text-indigo-700 mt-1">
               Complete all sections of the trailer inspection checklist. Mark status for each task and add descriptions for items that require attention or have issues found.
+              {isMandatoryCheckActive && (
+                <span className="block mt-2 font-medium text-red-700">
+                  Note: Status, Description, and Done By fields are mandatory for completion.
+                </span>
+              )}
             </p>
           </div>
         </div>

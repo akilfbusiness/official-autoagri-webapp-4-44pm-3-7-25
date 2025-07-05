@@ -55,6 +55,9 @@ function App() {
   const [confirmModalType, setConfirmModalType] = useState<'archive' | 'unarchive' | 'delete' | 'complete' | 'download'>('archive');
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
+  // Trailer validation state
+  const [trailerValidationErrors, setTrailerValidationErrors] = useState<any>(null);
+
   const activeJobCards = getActiveJobCards();
   const archivedJobCards = getArchivedJobCards();
   const incompleteWorkerJobCards = getIncompleteWorkerJobCards();
@@ -177,19 +180,188 @@ function App() {
 
   // New handler for completing a job from mechanic portal
   const handleCompleteWorkerJob = (jobCard: JobCard) => {
-    setConfirmModalTitle('Complete Worker Assignment');
-    setConfirmModalMessage(`Are you sure you want to mark the worker assignment for job card ${jobCard.job_number} as completed? This will remove the job from your active tasks.`);
-    setConfirmModalConfirmText('Complete Assignment');
-    setConfirmModalType('complete');
-    setPendingAction(() => async () => {
+    // First, validate trailer tasks if this job card has trailer tasks
+    const validateAndComplete = async () => {
       try {
-        await completeWorkerAssignment(jobCard.id);
+        // Fetch the most up-to-date job card details
+        const detailedJobCard = await fetchJobCardDetails(jobCard.id);
+        if (!detailedJobCard) {
+          alert('Error loading job card details. Please try again.');
+          return;
+        }
+
+        // Validate trailer tasks if vehicle type includes Trailer
+        if (detailedJobCard.vehicle_type?.includes('Trailer')) {
+          const validationResult = validateTrailerTasks(detailedJobCard);
+          if (!validationResult.isValid) {
+            // Show error and open form with validation errors
+            setConfirmModalTitle('Incomplete Trailer Tasks');
+            setConfirmModalMessage('Please fill out all mandatory fields in the Trailer Task List before completing the job. Status, Description, and Done By fields are required for each task.');
+            setConfirmModalConfirmText('OK');
+            setConfirmModalType('complete');
+            setPendingAction(() => () => {
+              // Open the form with validation errors
+              setTrailerValidationErrors(validationResult.invalidFields);
+              setFormMode('mechanic');
+              setEditingJobCard(detailedJobCard);
+              setActiveFormTab('mechanic');
+              setIsFormOpen(true);
+            });
+            setIsConfirmModalOpen(true);
+            return;
+          }
+        }
+
+        // If validation passes, proceed with normal completion flow
+        setConfirmModalTitle('Complete Worker Assignment');
+        setConfirmModalMessage(`Are you sure you want to mark the worker assignment for job card ${jobCard.job_number} as completed? This will remove the job from your active tasks.`);
+        setConfirmModalConfirmText('Complete Assignment');
+        setConfirmModalType('complete');
+        setPendingAction(() => async () => {
+          try {
+            await completeWorkerAssignment(jobCard.id);
+          } catch (error) {
+            console.error('Error completing worker assignment:', error);
+            alert('Error completing worker assignment. Please try again.');
+          }
+        });
+        setIsConfirmModalOpen(true);
       } catch (error) {
-        console.error('Error completing worker assignment:', error);
-        alert('Error completing worker assignment. Please try again.');
+        console.error('Error validating job card:', error);
+        alert('Error validating job card. Please try again.');
       }
-    });
-    setIsConfirmModalOpen(true);
+    };
+
+    validateAndComplete();
+  };
+
+  // Validation function for trailer tasks
+  const validateTrailerTasks = (jobCard: JobCard) => {
+    const invalidFields: any = {};
+    let isValid = true;
+
+    if (!jobCard.trailer_progress || jobCard.trailer_progress.length === 0) {
+      return { isValid: true, invalidFields: {} };
+    }
+
+    const trailerProgress = jobCard.trailer_progress[0];
+
+    // Validate electrical tasks
+    if (trailerProgress.electrical_tasks) {
+      invalidFields.electrical_tasks = {};
+      trailerProgress.electrical_tasks.forEach((task, index) => {
+        const taskInvalid: any = {};
+        if (!task.status) {
+          taskInvalid.status = true;
+          isValid = false;
+        }
+        if (!task.description || task.description.trim() === '') {
+          taskInvalid.description = true;
+          isValid = false;
+        }
+        if (!task.done_by || task.done_by.trim() === '') {
+          taskInvalid.done_by = true;
+          isValid = false;
+        }
+        if (Object.keys(taskInvalid).length > 0) {
+          invalidFields.electrical_tasks[index] = taskInvalid;
+        }
+      });
+    }
+
+    // Validate tires and wheels tasks
+    if (trailerProgress.tires_wheels_tasks) {
+      invalidFields.tires_wheels_tasks = {};
+      trailerProgress.tires_wheels_tasks.forEach((task, index) => {
+        const taskInvalid: any = {};
+        if (!task.status) {
+          taskInvalid.status = true;
+          isValid = false;
+        }
+        if (!task.description || task.description.trim() === '') {
+          taskInvalid.description = true;
+          isValid = false;
+        }
+        if (!task.done_by || task.done_by.trim() === '') {
+          taskInvalid.done_by = true;
+          isValid = false;
+        }
+        if (Object.keys(taskInvalid).length > 0) {
+          invalidFields.tires_wheels_tasks[index] = taskInvalid;
+        }
+      });
+    }
+
+    // Validate brake system tasks
+    if (trailerProgress.brake_system_tasks) {
+      invalidFields.brake_system_tasks = {};
+      trailerProgress.brake_system_tasks.forEach((task, index) => {
+        const taskInvalid: any = {};
+        if (!task.status) {
+          taskInvalid.status = true;
+          isValid = false;
+        }
+        if (!task.description || task.description.trim() === '') {
+          taskInvalid.description = true;
+          isValid = false;
+        }
+        if (!task.done_by || task.done_by.trim() === '') {
+          taskInvalid.done_by = true;
+          isValid = false;
+        }
+        if (Object.keys(taskInvalid).length > 0) {
+          invalidFields.brake_system_tasks[index] = taskInvalid;
+        }
+      });
+    }
+
+    // Validate suspension tasks
+    if (trailerProgress.suspension_tasks) {
+      invalidFields.suspension_tasks = {};
+      trailerProgress.suspension_tasks.forEach((task, index) => {
+        const taskInvalid: any = {};
+        if (!task.status) {
+          taskInvalid.status = true;
+          isValid = false;
+        }
+        if (!task.description || task.description.trim() === '') {
+          taskInvalid.description = true;
+          isValid = false;
+        }
+        if (!task.done_by || task.done_by.trim() === '') {
+          taskInvalid.done_by = true;
+          isValid = false;
+        }
+        if (Object.keys(taskInvalid).length > 0) {
+          invalidFields.suspension_tasks[index] = taskInvalid;
+        }
+      });
+    }
+
+    // Validate body chassis tasks
+    if (trailerProgress.body_chassis_tasks) {
+      invalidFields.body_chassis_tasks = {};
+      trailerProgress.body_chassis_tasks.forEach((task, index) => {
+        const taskInvalid: any = {};
+        if (!task.status) {
+          taskInvalid.status = true;
+          isValid = false;
+        }
+        if (!task.description || task.description.trim() === '') {
+          taskInvalid.description = true;
+          isValid = false;
+        }
+        if (!task.done_by || task.done_by.trim() === '') {
+          taskInvalid.done_by = true;
+          isValid = false;
+        }
+        if (Object.keys(taskInvalid).length > 0) {
+          invalidFields.body_chassis_tasks[index] = taskInvalid;
+        }
+      });
+    }
+
+    return { isValid, invalidFields };
   };
 
   // New handler for completing a job from parts portal
@@ -540,6 +712,7 @@ function App() {
     setEditingJobCard(null); // Clear editing job card to discard unsaved changes
     setFormMode('create'); // Reset form mode to default
     setActiveFormTab('information'); // Reset to first tab
+    setTrailerValidationErrors(null); // Clear validation errors
   };
 
   const getPortalIcon = (portal: PortalType) => {
@@ -1121,6 +1294,7 @@ function App() {
         restrictedMode={formMode === 'mechanic' || formMode === 'parts'} // Pass restricted mode flag for both portals
         onRefresh={handleRefreshJobCard}
         initialCustomerData={selectedCustomerData} // Pass the selected customer data
+        initialTrailerValidationErrors={trailerValidationErrors} // Pass validation errors
       />
 
       {/* Confirmation Modal */}
