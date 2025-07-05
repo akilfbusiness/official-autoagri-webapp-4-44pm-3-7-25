@@ -42,10 +42,6 @@ function App() {
   const [editingJobCard, setEditingJobCard] = useState<JobCard | null>(null);
   const [activeFormTab, setActiveFormTab] = useState<FormTabType>('information');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // Worker portal state
-  const [isWorkerPortalMode, setIsWorkerPortalMode] = useState(false);
-  const [currentInvalidFieldsMap, setCurrentInvalidFieldsMap] = useState<any>({});
 
   // Customer selection modal state
   const [isCustomerSelectionOpen, setIsCustomerSelectionOpen] = useState(false);
@@ -62,141 +58,70 @@ function App() {
   // Trailer validation state
   const [trailerValidationErrors, setTrailerValidationErrors] = useState<any>(null);
 
-  // Helper function to validate mandatory fields and return invalid fields map
-  const validateMandatoryFields = (jobCard: JobCard) => {
-    const invalidFields: any = {
-      service_progress: {},
-      trailer_progress: {
-        electrical_tasks: {},
-        tires_wheels_tasks: {},
-        brake_system_tasks: {},
-        suspension_tasks: {},
-        body_chassis_tasks: {},
-      },
-      other_progress: {},
-    };
-
-    let hasInvalidFields = false;
-
-    // Check service progress tasks
-    if (jobCard.service_progress && jobCard.service_progress.length > 0) {
-      jobCard.service_progress.forEach((task) => {
-        const taskInvalid: any = {};
-        if (!task.status) taskInvalid.status = true;
-        if (!task.description || task.description.trim() === '') taskInvalid.description = true;
-        if (!task.done_by || task.done_by.trim() === '') taskInvalid.done_by = true;
-        
-        if (Object.keys(taskInvalid).length > 0) {
-          invalidFields.service_progress[task.task_name] = taskInvalid;
-          hasInvalidFields = true;
-        }
-      });
-    }
-
-    // Check trailer progress tasks
-    if (jobCard.trailer_progress && jobCard.trailer_progress.length > 0) {
-      const trailer = jobCard.trailer_progress[0];
-      
-      // Check electrical tasks
-      if (trailer.electrical_tasks) {
-        trailer.electrical_tasks.forEach((task, index) => {
-          const taskInvalid: any = {};
-          if (!task.status) taskInvalid.status = true;
-          if (!task.description || task.description.trim() === '') taskInvalid.description = true;
-          if (!task.done_by || task.done_by.trim() === '') taskInvalid.done_by = true;
-          
-          if (Object.keys(taskInvalid).length > 0) {
-            invalidFields.trailer_progress.electrical_tasks[index] = taskInvalid;
-            hasInvalidFields = true;
-          }
-        });
-      }
-
-      // Check tires/wheels tasks
-      if (trailer.tires_wheels_tasks) {
-        trailer.tires_wheels_tasks.forEach((task, index) => {
-          const taskInvalid: any = {};
-          if (!task.status) taskInvalid.status = true;
-          if (!task.description || task.description.trim() === '') taskInvalid.description = true;
-          if (!task.done_by || task.done_by.trim() === '') taskInvalid.done_by = true;
-          
-          if (Object.keys(taskInvalid).length > 0) {
-            invalidFields.trailer_progress.tires_wheels_tasks[index] = taskInvalid;
-            hasInvalidFields = true;
-          }
-        });
-      }
-
-      // Check brake system tasks
-      if (trailer.brake_system_tasks) {
-        trailer.brake_system_tasks.forEach((task, index) => {
-          const taskInvalid: any = {};
-          if (!task.status) taskInvalid.status = true;
-          if (!task.description || task.description.trim() === '') taskInvalid.description = true;
-          if (!task.done_by || task.done_by.trim() === '') taskInvalid.done_by = true;
-          
-          if (Object.keys(taskInvalid).length > 0) {
-            invalidFields.trailer_progress.brake_system_tasks[index] = taskInvalid;
-            hasInvalidFields = true;
-          }
-        });
-      }
-
-      // Check suspension tasks
-      if (trailer.suspension_tasks) {
-        trailer.suspension_tasks.forEach((task, index) => {
-          const taskInvalid: any = {};
-          if (!task.status) taskInvalid.status = true;
-          if (!task.description || task.description.trim() === '') taskInvalid.description = true;
-          if (!task.done_by || task.done_by.trim() === '') taskInvalid.done_by = true;
-          
-          if (Object.keys(taskInvalid).length > 0) {
-            invalidFields.trailer_progress.suspension_tasks[index] = taskInvalid;
-            hasInvalidFields = true;
-          }
-        });
-      }
-
-      // Check body/chassis tasks
-      if (trailer.body_chassis_tasks) {
-        trailer.body_chassis_tasks.forEach((task, index) => {
-          const taskInvalid: any = {};
-          if (!task.status) taskInvalid.status = true;
-          if (!task.description || task.description.trim() === '') taskInvalid.description = true;
-          if (!task.done_by || task.done_by.trim() === '') taskInvalid.done_by = true;
-          
-          if (Object.keys(taskInvalid).length > 0) {
-            invalidFields.trailer_progress.body_chassis_tasks[index] = taskInvalid;
-            hasInvalidFields = true;
-          }
-        });
-      }
-    }
-
-    // Check other progress tasks
-    if (jobCard.other_progress && jobCard.other_progress.length > 0) {
-      jobCard.other_progress.forEach((task) => {
-        const taskInvalid: any = {};
-        if (!task.status) taskInvalid.status = true;
-        if (!task.description || task.description.trim() === '') taskInvalid.description = true;
-        if (!task.done_by || task.done_by.trim() === '') taskInvalid.done_by = true;
-        
-        if (Object.keys(taskInvalid).length > 0) {
-          invalidFields.other_progress[task.id] = taskInvalid;
-          hasInvalidFields = true;
-        }
-      });
-    }
-
-    return { invalidFields, hasInvalidFields };
-  };
-
   const activeJobCards = getActiveJobCards();
   const archivedJobCards = getArchivedJobCards();
   const incompleteWorkerJobCards = getIncompleteWorkerJobCards();
   const incompletePartsJobCards = getIncompletePartsJobCards();
   
   const currentJobCards = activeTab === 'active' ? activeJobCards : archivedJobCards.slice(0, 5); // Limit archived to 5
+
+  // Validation function for mandatory fields
+  const validateMandatoryFields = (jobCard: JobCard): { isValid: boolean; message: string } => {
+    const errors: string[] = [];
+    
+    // Check Service A, B, C, D tasks
+    if (jobCard.service_selection && ['Service A', 'Service B', 'Service C', 'Service D'].includes(jobCard.service_selection)) {
+      const serviceProgress = jobCard.service_progress || [];
+      const incompleteTasks = serviceProgress.filter(task => 
+        !task.status || !task.description?.trim() || !task.done_by?.trim()
+      );
+      
+      if (incompleteTasks.length > 0) {
+        errors.push(`${jobCard.service_selection} has ${incompleteTasks.length} incomplete task(s) with missing Status, Description, or Done By fields.`);
+      }
+    }
+    
+    // Check Trailer tasks
+    if (jobCard.vehicle_type?.includes('Trailer')) {
+      const trailerProgress = jobCard.trailer_progress?.[0];
+      if (trailerProgress) {
+        const allTrailerTasks = [
+          ...(trailerProgress.electrical_tasks || []),
+          ...(trailerProgress.tires_wheels_tasks || []),
+          ...(trailerProgress.brake_system_tasks || []),
+          ...(trailerProgress.suspension_tasks || []),
+          ...(trailerProgress.body_chassis_tasks || [])
+        ];
+        
+        const incompleteTrailerTasks = allTrailerTasks.filter(task => 
+          !task.status || !task.description?.trim() || !task.done_by?.trim()
+        );
+        
+        if (incompleteTrailerTasks.length > 0) {
+          errors.push(`Trailer Task List has ${incompleteTrailerTasks.length} incomplete task(s) with missing Status, Description, or Done By fields.`);
+        }
+      }
+    }
+    
+    // Check Other tasks
+    if (jobCard.vehicle_type?.includes('Other')) {
+      const otherProgress = jobCard.other_progress || [];
+      const incompleteOtherTasks = otherProgress.filter(task => 
+        !task.status || !task.description?.trim() || !task.done_by?.trim()
+      );
+      
+      if (incompleteOtherTasks.length > 0) {
+        errors.push(`Other Task List has ${incompleteOtherTasks.length} incomplete task(s) with missing Status, Description, or Done By fields.`);
+      }
+    }
+    
+    if (errors.length > 0) {
+      const message = `Cannot complete job card. The following mandatory fields are missing:<br><br>${errors.map(error => `• ${error}`).join('<br>')}<br><br>Please ensure all Status, Description, and Done By fields are completed before marking this job as finished.`;
+      return { isValid: false, message };
+    }
+    
+    return { isValid: true, message: '' };
+  };
 
   const handleCreateNew = () => {
     // Open customer selection modal instead of directly opening the form
@@ -273,12 +198,6 @@ function App() {
         const detailedJobCard = await fetchJobCardDetails(jobCard.id);
         if (detailedJobCard) {
           setSelectedCustomerData(null); // Clear any existing customer data
-          setIsWorkerPortalMode(true); // Enable worker portal mode
-          
-          // Generate initial invalid fields map
-          const { invalidFields } = validateMandatoryFields(detailedJobCard);
-          setCurrentInvalidFieldsMap(invalidFields);
-          
           setFormMode('mechanic');
           setEditingJobCard(detailedJobCard);
           setActiveFormTab('mechanic');
@@ -302,12 +221,6 @@ function App() {
         const detailedJobCard = await fetchJobCardDetails(jobCard.id);
         if (detailedJobCard) {
           setSelectedCustomerData(null); // Clear any existing customer data
-          setIsWorkerPortalMode(true); // Enable worker portal mode
-          
-          // Generate initial invalid fields map
-          const { invalidFields } = validateMandatoryFields(detailedJobCard);
-          setCurrentInvalidFieldsMap(invalidFields);
-          
           setFormMode('parts');
           setEditingJobCard(detailedJobCard);
           setActiveFormTab('parts');
@@ -325,63 +238,12 @@ function App() {
 
   // New handler for completing a job from mechanic portal
   const handleCompleteWorkerJob = (jobCard: JobCard) => {
-    // Validate mandatory fields before allowing completion
-    const { invalidFields, hasInvalidFields } = validateMandatoryFields(jobCard);
+    // Check for mandatory fields validation
+    const validationResult = validateMandatoryFields(jobCard);
     
-    if (hasInvalidFields) {
-      // Create detailed error message
-      let errorMessage = 'The job cannot be completed until all mandatory fields are filled out:<br><br>';
-      
-      // Check service progress
-      if (Object.keys(invalidFields.service_progress).length > 0) {
-        errorMessage += '<strong>Service Tasks:</strong><br>';
-        Object.keys(invalidFields.service_progress).forEach(taskName => {
-          const fields = invalidFields.service_progress[taskName];
-          const missingFields = [];
-          if (fields.status) missingFields.push('Status');
-          if (fields.description) missingFields.push('Description');
-          if (fields.done_by) missingFields.push('Done By');
-          errorMessage += `• ${taskName}: ${missingFields.join(', ')}<br>`;
-        });
-        errorMessage += '<br>';
-      }
-      
-      // Check trailer progress
-      const trailerSections = ['electrical_tasks', 'tires_wheels_tasks', 'brake_system_tasks', 'suspension_tasks', 'body_chassis_tasks'];
-      const trailerSectionNames = ['Electrical System', 'Tires and Wheels', 'Brake System', 'Suspension', 'Body/Chassis'];
-      
-      trailerSections.forEach((section, sectionIndex) => {
-        if (Object.keys(invalidFields.trailer_progress[section]).length > 0) {
-          errorMessage += `<strong>Trailer - ${trailerSectionNames[sectionIndex]}:</strong><br>`;
-          Object.keys(invalidFields.trailer_progress[section]).forEach(taskIndex => {
-            const fields = invalidFields.trailer_progress[section][taskIndex];
-            const missingFields = [];
-            if (fields.status) missingFields.push('Status');
-            if (fields.description) missingFields.push('Description');
-            if (fields.done_by) missingFields.push('Done By');
-            errorMessage += `• Task ${parseInt(taskIndex) + 1}: ${missingFields.join(', ')}<br>`;
-          });
-          errorMessage += '<br>';
-        }
-      });
-      
-      // Check other progress
-      if (Object.keys(invalidFields.other_progress).length > 0) {
-        errorMessage += '<strong>Other Tasks:</strong><br>';
-        Object.keys(invalidFields.other_progress).forEach(taskId => {
-          const fields = invalidFields.other_progress[taskId];
-          const missingFields = [];
-          if (fields.status) missingFields.push('Status');
-          if (fields.description) missingFields.push('Description');
-          if (fields.done_by) missingFields.push('Done By');
-          errorMessage += `• Task: ${missingFields.join(', ')}<br>`;
-        });
-      }
-      
-      errorMessage += '<br>Please fill out all mandatory fields before completing the job.';
-      
-      setConfirmModalTitle('Mandatory Fields Required');
-      setConfirmModalMessage(errorMessage);
+    if (!validationResult.isValid) {
+      setConfirmModalTitle('Incomplete Mandatory Fields');
+      setConfirmModalMessage(validationResult.message);
       setConfirmModalConfirmText('OK');
       setConfirmModalType('complete');
       setPendingAction(null); // No action to perform, just show the message
@@ -575,63 +437,12 @@ function App() {
 
   // New handler for completing a job from parts portal
   const handleCompletePartsJob = (jobCard: JobCard) => {
-    // Validate mandatory fields before allowing completion
-    const { invalidFields, hasInvalidFields } = validateMandatoryFields(jobCard);
+    // Check for mandatory fields validation
+    const validationResult = validateMandatoryFields(jobCard);
     
-    if (hasInvalidFields) {
-      // Create detailed error message (same logic as worker portal)
-      let errorMessage = 'The job cannot be completed until all mandatory fields are filled out:<br><br>';
-      
-      // Check service progress
-      if (Object.keys(invalidFields.service_progress).length > 0) {
-        errorMessage += '<strong>Service Tasks:</strong><br>';
-        Object.keys(invalidFields.service_progress).forEach(taskName => {
-          const fields = invalidFields.service_progress[taskName];
-          const missingFields = [];
-          if (fields.status) missingFields.push('Status');
-          if (fields.description) missingFields.push('Description');
-          if (fields.done_by) missingFields.push('Done By');
-          errorMessage += `• ${taskName}: ${missingFields.join(', ')}<br>`;
-        });
-        errorMessage += '<br>';
-      }
-      
-      // Check trailer progress
-      const trailerSections = ['electrical_tasks', 'tires_wheels_tasks', 'brake_system_tasks', 'suspension_tasks', 'body_chassis_tasks'];
-      const trailerSectionNames = ['Electrical System', 'Tires and Wheels', 'Brake System', 'Suspension', 'Body/Chassis'];
-      
-      trailerSections.forEach((section, sectionIndex) => {
-        if (Object.keys(invalidFields.trailer_progress[section]).length > 0) {
-          errorMessage += `<strong>Trailer - ${trailerSectionNames[sectionIndex]}:</strong><br>`;
-          Object.keys(invalidFields.trailer_progress[section]).forEach(taskIndex => {
-            const fields = invalidFields.trailer_progress[section][taskIndex];
-            const missingFields = [];
-            if (fields.status) missingFields.push('Status');
-            if (fields.description) missingFields.push('Description');
-            if (fields.done_by) missingFields.push('Done By');
-            errorMessage += `• Task ${parseInt(taskIndex) + 1}: ${missingFields.join(', ')}<br>`;
-          });
-          errorMessage += '<br>';
-        }
-      });
-      
-      // Check other progress
-      if (Object.keys(invalidFields.other_progress).length > 0) {
-        errorMessage += '<strong>Other Tasks:</strong><br>';
-        Object.keys(invalidFields.other_progress).forEach(taskId => {
-          const fields = invalidFields.other_progress[taskId];
-          const missingFields = [];
-          if (fields.status) missingFields.push('Status');
-          if (fields.description) missingFields.push('Description');
-          if (fields.done_by) missingFields.push('Done By');
-          errorMessage += `• Task: ${missingFields.join(', ')}<br>`;
-        });
-      }
-      
-      errorMessage += '<br>Please fill out all mandatory fields before completing the job.';
-      
-      setConfirmModalTitle('Mandatory Fields Required');
-      setConfirmModalMessage(errorMessage);
+    if (!validationResult.isValid) {
+      setConfirmModalTitle('Incomplete Mandatory Fields');
+      setConfirmModalMessage(validationResult.message);
       setConfirmModalConfirmText('OK');
       setConfirmModalType('complete');
       setPendingAction(null); // No action to perform, just show the message
@@ -983,8 +794,6 @@ function App() {
   const handleCloseJobCardForm = () => {
     setIsFormOpen(false);
     setSelectedCustomerData(null); // Clear customer data when closing form
-    setIsWorkerPortalMode(false); // Reset worker portal mode
-    setCurrentInvalidFieldsMap({}); // Clear invalid fields map
     setEditingJobCard(null); // Clear editing job card to discard unsaved changes
     setFormMode('create'); // Reset form mode to default
     setActiveFormTab('information'); // Reset to first tab
@@ -1568,8 +1377,6 @@ function App() {
         activeTab={activeFormTab}
         onTabChange={setActiveFormTab}
         restrictedMode={formMode === 'mechanic' || formMode === 'parts'} // Pass restricted mode flag for both portals
-        isWorkerPortalMode={isWorkerPortalMode}
-        currentInvalidFieldsMap={currentInvalidFieldsMap}
         onRefresh={handleRefreshJobCard}
         initialCustomerData={selectedCustomerData} // Pass the selected customer data
         initialTrailerValidationErrors={trailerValidationErrors} // Pass validation errors
