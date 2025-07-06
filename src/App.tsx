@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Wrench, Archive, Plus, FileText, Settings, Users, Package, Edit, CheckCircle, X, Menu, Database } from 'lucide-react';
+import { useJobCards } from './hooks/useJobCards';
 import { JobCardTable } from './components/JobCardTable';
 import { JobCardForm } from './components/JobCardForm';
 import { ConfirmationModal } from './components/ConfirmationModal';
