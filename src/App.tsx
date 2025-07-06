@@ -57,6 +57,9 @@ function App() {
 
   // Trailer validation state
   const [trailerValidationErrors, setTrailerValidationErrors] = useState<any>(null);
+  const [showServiceAModal, setShowServiceAModal] = useState(false);
+  const [serviceAModalMessage, setServiceAModalMessage] = useState('');
+  const [serviceAInvalidFields, setServiceAInvalidFields] = useState<ServiceATaskInvalidFields>({});
 
   const activeJobCards = getActiveJobCards();
   const archivedJobCards = getArchivedJobCards();
