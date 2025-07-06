@@ -111,6 +111,15 @@ export interface CustomerVehicleSuggestion {
   displayText: string;
 }
 
+// Interface for tracking invalid fields in Service A tasks
+export interface ServiceATaskInvalidFields {
+  [taskName: string]: {
+    status?: boolean;
+    description?: boolean;
+    done_by?: boolean;
+  };
+}
+
 export interface JobCard {
   id: string;
   created_at: Date;

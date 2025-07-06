@@ -1,6 +1,6 @@
 import React from 'react';
 import { Settings } from 'lucide-react';
-import { ServiceTaskProgress } from '../types/JobCard';
+import { ServiceTaskProgress, ServiceATaskInvalidFields } from '../types/JobCard';
 import { ServiceTaskRow } from './ServiceTaskRow';
 
 interface ServiceCTaskListProps {
@@ -8,6 +8,8 @@ interface ServiceCTaskListProps {
   mode: 'create' | 'edit' | 'view';
   currentProgress?: ServiceTaskProgress[];
   onProgressChange?: (progress: ServiceTaskProgress[]) => void;
+  isMandatoryCheckActive?: boolean;
+  initialInvalidFields?: ServiceATaskInvalidFields;
 }
 
 const SERVICE_C_TASKS = [
@@ -83,6 +85,8 @@ export const ServiceCTaskList: React.FC<ServiceCTaskListProps> = ({
   mode,
   currentProgress = [],
   onProgressChange,
+  isMandatoryCheckActive = false,
+  initialInvalidFields = {},
 }) => {
   // Only show if Service C is selected
   if (serviceSelection !== 'Service C') {
@@ -172,6 +176,8 @@ export const ServiceCTaskList: React.FC<ServiceCTaskListProps> = ({
                   index={index}
                   progress={getTaskProgress(task)}
                   isViewMode={isViewMode}
+                  isMandatoryCheckActive={isMandatoryCheckActive}
+                  invalidFields={initialInvalidFields[task] || {}}
                   onUpdate={updateTaskProgress}
                 />
               ))}

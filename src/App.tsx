@@ -6,7 +6,7 @@ import { ConfirmationModal } from './components/ConfirmationModal';
 import { CustomerSelectionModal } from './components/CustomerSelectionModal';
 import { Sidebar } from './components/Sidebar';
 import { DatabasePage } from './components/DatabasePage';
-import { useJobCards } from './hooks/useJobCards';
+import { JobCard, CustomerVehicleSuggestion, ServiceATaskInvalidFields } from './types/JobCard';
 import { JobCard, JobCardFormData, CustomerVehicleSuggestion } from './types/JobCard';
 
 type TabType = 'active' | 'archived';
